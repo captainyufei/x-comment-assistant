@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>回复试评 · X 评论助手</title>
+  <link rel="stylesheet" href="/review.css">
+  <script src="/review-session.js"></script>
+  <script src="/review.js" defer></script>
+</head>
+<body>
+  <main class="workspace">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">X 评论助手 / 本机工作台</p>
+        <h1>回复试评</h1>
+        <p class="intro">看看有没有读懂，再挑一句你愿意说的话。你的意见会自动保存到这台电脑。</p>
+      </div>
+      <div class="header-actions">
+        <button id="reload" class="button secondary" type="button">刷新样例</button>
+        <button id="export" class="button" type="button" disabled>导出反馈</button>
+      </div>
+    </header>
+    <section class="summary" aria-label="试评进度">
+      <div><strong id="total-count">—</strong><span>试评样例</span></div>
+      <div><strong id="generated-count">—</strong><span>已生成</span></div>
+      <div><strong id="reviewed-count">—</strong><span>已写意见</span></div>
+      <p>这里只试评草稿，发送由你在 X 完成。</p>
+    </section>
+    <div class="toolbar">
+      <div class="filters" role="group" aria-label="筛选试评样例">
+        <button type="button" data-filter="all" aria-pressed="true">全部</button>
+        <button type="button" data-filter="unreviewed" aria-pressed="false">待评价</button>
+        <button type="button" data-filter="reviewed" aria-pressed="false">已评价</button>
+      </div>
+      <span id="global-status" role="status" aria-live="polite">正在读取样例…</span>
+      <button id="retry-save" class="text-button" type="button" hidden>重新保存意见</button>
+    </div>
+    <div id="page-error" class="notice error" role="alert" hidden></div>
+    <section id="items" aria-label="原帖和回复试评"></section>
+    <section id="empty" class="empty" hidden>
+      <span class="empty-mark" aria-hidden="true">↳</span>
+      <h2 id="empty-title">还没有可试评的原帖</h2>
+      <p id="empty-description">真实样例录入后会出现在这里。没有生成成功的内容会明确显示状态。</p>
+    </section>
+    <footer>意见会单独保存在本机，更新插件时可以保留。页面不会自动发布回复。</footer>
+  </main>
+</body>
+</html>

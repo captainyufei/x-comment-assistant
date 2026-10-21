@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "X 评论助手",
+  "short_name": "X 评论助手",
+  "version": "0.12.1",
+  "description": "理解原帖语境，从八种回复风格中自动匹配，一次生成四条中文候选；也可手动选风格，由你挑选、编辑并发送。",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8769/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "X 评论助手 · 为当前推文生成回复",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*"
+      ],
+      "js": [
+        "reply-style-catalog.js",
+        "composer-source.js",
+        "composer-ui.js",
+        "composer.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:8769"
+  }
+}

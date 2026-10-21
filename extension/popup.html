@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>X 评论助手</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="popup" aria-label="X 评论助手">
+    <section id="home-screen" class="screen">
+      <header class="brand-header">
+        <div class="brand"><img src="icons/icon-48.png" width="38" height="38" alt=""><h1>X 评论助手</h1></div>
+        <label class="switch" title="启用评论助手"><input id="enabled" type="checkbox" role="switch" aria-label="启用评论助手" checked><span class="switch-track" aria-hidden="true"></span></label>
+      </header>
+      <div class="engine-section">
+        <p class="eyebrow">当前引擎</p>
+        <button id="engine-settings" class="engine-card" type="button" aria-label="设置当前引擎">
+          <span id="engine-mark" class="engine-mark" aria-hidden="true">D</span>
+          <span class="engine-copy"><strong id="engine-name">正在读取…</strong><span id="engine-model">检查本机配置</span></span>
+          <svg class="icon chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+        </button>
+        <div id="connection" class="connection checking" role="status"><span class="status-dot" aria-hidden="true"></span><span id="connection-text">正在检查连接…</span><button id="refresh-status" class="quiet-button" type="button">重试</button></div>
+      </div>
+      <div class="tone-section">
+        <div class="tone-row"><label id="tone-label">回复风格</label><button id="tone-toggle" class="tone-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="tone-menu" aria-describedby="tone-note"><span id="tone-value">自动匹配</span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+        <p id="tone-note" class="tone-note">自动匹配按原帖选四条；手动选择生成同风格四条。下次生成生效。</p>
+        <div id="tone-menu" class="tone-menu" role="listbox" aria-labelledby="tone-label" hidden></div>
+      </div>
+      <p id="usage-note" class="usage-note">打开 X 回复框，点击生成后挑选四条候选。</p>
+      <footer class="home-footer">
+        <button id="open-settings" class="footer-action" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.6 3-.6 2.2-2 .9L5 5.5 3.5 8l1.7 1.6-.2 2.2L3 13l1 2.8 2.3-.1 1.4 1.7-.2 2.3 2.8 1 1.3-2h2.1l1.3 2 2.8-1-.2-2.3 1.4-1.7 2.3.1 1-2.8-2-1.2-.2-2.2L22 8l-1.5-2.5-2 .6-2-.9L15.9 3Z"/><circle cx="12.7" cy="11.7" r="3.2"/></svg><span>模型设置</span></button>
+      </footer>
+    </section>
+    <section id="settings-screen" class="screen" hidden>
+      <header class="settings-header"><button id="back-home" class="icon-button" type="button" aria-label="返回"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><h2>模型设置</h2></header>
+      <div class="settings-tabs" role="tablist" aria-label="模型来源"><button id="api-tab" type="button" role="tab" aria-selected="true" aria-controls="api-settings">模型 API</button><button id="agent-tab" type="button" role="tab" aria-selected="false" aria-controls="agent-settings">本地 Agent</button><button id="local-tab" type="button" role="tab" aria-selected="false" aria-controls="local-settings">本地模型</button></div>
+      <form id="api-settings" role="tabpanel" aria-labelledby="api-tab" autocomplete="off">
+        <label class="field-label" for="provider">服务商</label><select id="provider" name="provider"></select>
+        <div class="model-heading"><label class="field-label" for="api-models">模型名称</label><button id="api-model-refresh" class="quiet-button" type="button">刷新列表</button></div><select id="api-models" aria-label="模型名称"></select><input id="api-model" name="model" aria-label="手动填写模型名称" placeholder="填写服务商提供的模型名称或接入点 ID" spellcheck="false" autocapitalize="off" maxlength="160" hidden>
+        <p id="api-model-note" class="field-note model-note" role="status">填写密钥后自动读取，也可手动填写模型。</p>
+        <label class="field-label" for="api-key">API Key</label><input id="api-key" name="api-key" type="password" placeholder="输入 DeepSeek API Key" autocomplete="new-password" spellcheck="false" autocapitalize="off">
+        <p id="key-note" class="field-note">密钥仅保存在本机。</p>
+        <details id="api-address-options" class="address-options"><summary>服务地址</summary><label class="sr-only" for="api-base-url">API 服务地址</label><input id="api-base-url" name="base-url" type="url" spellcheck="false" autocapitalize="off" maxlength="500"><p class="field-note">按密钥所属地域填写官方 API 地址。</p></details>
+        <p class="settings-note">模型列表来自服务商；生成权限和余额在实际调用时确认。</p>
+        <button id="save-api" class="primary-button" type="submit">保存配置</button>
+      </form>
+      <form id="agent-settings" role="tabpanel" aria-labelledby="agent-tab" hidden>
+        <label class="field-label" for="agent-provider">已安装的 Agent</label><select id="agent-provider" name="agent"></select>
+        <p id="agent-note" class="settings-note">读取本机安装状态…</p>
+        <p class="field-note">复用本机 CLI 登录，无需在插件中再次填写密钥。</p>
+        <button id="save-agent" class="primary-button" type="submit">保存配置</button>
+      </form>
+      <form id="local-settings" role="tabpanel" aria-labelledby="local-tab" autocomplete="off" hidden>
+        <label class="field-label" for="model-provider">本地服务</label><select id="model-provider" name="provider"></select>
+        <div class="model-heading"><label class="field-label" for="local-models">模型名称</label><button id="local-model-refresh" class="quiet-button" type="button">刷新列表</button></div><select id="local-models" aria-label="本地模型名称"></select><input id="local-model" name="model" aria-label="手动填写本地模型名称" placeholder="填写本机已安装的模型名称" spellcheck="false" autocapitalize="off" maxlength="160" hidden>
+        <p id="local-model-note" class="field-note model-note" role="status">读取本机服务的模型，不会下载模型。</p>
+        <label class="field-label" for="local-base-url">服务地址</label><input id="local-base-url" name="base-url" type="url" spellcheck="false" autocapitalize="off" maxlength="500">
+        <label class="field-label" for="local-api-key">API Key <span class="optional">可选</span></label><input id="local-api-key" name="api-key" type="password" placeholder="未设置认证可留空" autocomplete="new-password" spellcheck="false" autocapitalize="off">
+        <p id="local-key-note" class="field-note">先在本机启动服务并加载模型，不会自动下载。</p>
+        <button id="save-local" class="primary-button" type="submit">保存配置</button>
+      </form>
+    </section>
+    <p id="notice" class="notice" role="status" hidden></p>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

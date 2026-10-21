@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>X 评论助手</title>
+  <link rel="icon" href="icons/icon-32.png" type="image/png">
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <main class="panel-shell" id="panel">
+    <header class="masthead">
+      <div class="brand"><img class="brand-mark" src="icons/icon-128.png" width="39" height="39" alt="X 评论助手图标"><div><h1>X 评论助手<span class="title-dot">.</span></h1><p>中文 AI 回复</p></div></div>
+      <button type="button" class="icon-button" id="settings-toggle" aria-expanded="false" aria-controls="connection-settings" title="连接与偏好">设置 <span aria-hidden="true">↗</span></button>
+    </header>
+
+    <div class="connection-strip"><span class="connection-label" id="connection-status"><span class="status-dot" aria-hidden="true"></span><span id="connection-text">等待连接</span></span><span class="small-label">AI 回复服务</span></div>
+
+    <section class="connection-settings" id="connection-settings" aria-label="连接与偏好" hidden>
+      <div class="section-title"><h2>连接回复服务</h2><button class="text-button" id="check-bridge" type="button">检查连接</button></div>
+      <p class="helper">自动连接本机回复服务。点击生成后，一次返回四类中文回复。</p>
+      <p class="helper bridge-detail" id="bridge-detail">本机服务启动后会自动连接。</p>
+    </section>
+
+    <div class="notice notice-error" id="error-notice" role="alert" hidden></div>
+    <div class="notice" id="installation-notice" hidden>请在 Edge 或 Chrome 中加载这个插件，再从 X 页面打开面板。</div>
+
+    <section class="source-section" aria-labelledby="source-heading">
+      <div class="section-title"><div class="heading-group"><span class="section-number">01</span><h2 id="source-heading">挑一条，接句话</h2></div><button type="button" class="text-button" id="capture">读取当前页 <span aria-hidden="true">↻</span></button></div>
+      <div class="source-empty" id="source-empty"><span class="empty-mark" aria-hidden="true">“</span><p>先打开 X 时间线</p><span>点击「读取当前页」，挑一条你想聊的推文。</span></div>
+      <div id="source-editor" hidden>
+        <label class="sr-only" for="context-select">选择当前页面的推文</label><select id="context-select"></select>
+        <div class="source-meta"><span id="source-author"></span><a id="source-link" target="_blank" rel="noopener noreferrer" hidden>原推文 ↗</a></div>
+        <label class="sr-only" for="source-text">推文原文，可编辑</label><textarea id="source-text" class="source-text" placeholder="确认要回复的推文内容。" rows="5"></textarea>
+        <p class="source-note" id="source-note">页面内容仅在你点击时读取。</p>
+        <details class="quoted-context" id="quoted-context" hidden><summary>引用内容 <span>生成时一并参考</span></summary><p id="quoted-text"></p></details>
+      </div>
+    </section>
+
+    <section class="style-section" aria-labelledby="style-heading">
+      <div class="section-title"><div class="heading-group"><span class="section-number">02</span><h2 id="style-heading">一次生成，四种接法</h2></div><span class="small-label" id="style-summary">四类回复</span></div>
+      <p class="helper">认可并展开 · 幽默接梗 · 补充观点 · 换个角度</p>
+      <div class="generate-row"><button type="button" class="button button-primary" id="generate" disabled><span id="generate-label">生成四种回复</span><span aria-hidden="true">↗</span></button><button type="button" class="button button-secondary" id="cancel" hidden>停止</button></div>
+      <div class="job-status" id="job-status" role="status" aria-live="polite" hidden><span class="thinking-dot" aria-hidden="true"></span><span id="job-status-text">正在生成四种回复…</span></div>
+    </section>
+
+    <section class="results-section" aria-labelledby="results-heading">
+      <div class="section-title"><div class="heading-group"><span class="section-number">03</span><h2 id="results-heading">选一句，再斟酌</h2></div><span id="result-count" class="small-label">等你开聊</span></div>
+      <div class="result-empty" id="result-empty"><p>好回复，值得多想一句。</p><span>生成后可编辑、复制，再打开 X 回复窗口。</span></div>
+      <div class="results-list" id="results-list"></div>
+    </section>
+    <footer class="panel-footer"><span aria-hidden="true">↳</span><p>这里准备草稿。最后的「回复」，由你在 X 亲自点击。</p></footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="panel.js"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>合成回复窗口测试页</title>
+  <meta name="description" content="完全合成的测试页面，不对应真实作者、帖子或用户草稿。">
+</head>
+<body>
+  <!-- The timeline original includes a permalink; its modal counterpart does not. -->
+  <main>
+    <article role="article" tabindex="0" data-testid="tweet">
+      <div style="display:flex;flex-direction:row">
+        <div data-testid="Tweet-User-Avatar">
+          <div data-testid="UserAvatar-Container-demo_writer">
+            <a href="/demo_writer" role="link" tabindex="-1"><span aria-hidden="true">作者头像</span></a>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+          <div data-testid="User-Name">
+            <a href="/demo_writer" role="link">演示作者</a>
+            <a href="/demo_writer" role="link" tabindex="-1">@demo_writer</a>
+            <span>·</span>
+            <a href="/demo_writer/status/1234567890123456789" role="link" aria-label="刚刚"><time datetime="2026-01-01T00:00:00.000Z">刚刚</time></a>
+          </div>
+          <div dir="auto" data-testid="tweetText">整理资料时，给笔记加上明确标题和来源，往往比换一个新工具更有用。</div>
+          <div role="group" aria-label="1 回复、2 次转帖、3 喜欢、4 次观看">
+            <button type="button" role="button" data-testid="reply" aria-label="1 回复。回复">回复</button>
+            <button type="button" role="button" data-testid="retweet" aria-label="2 次转帖。转帖">转帖</button>
+            <button type="button" role="button" data-testid="like" aria-label="3 喜欢次数。喜欢">喜欢</button>
+            <button type="button" role="button" data-testid="bookmark" aria-label="书签">书签</button>
+          </div>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <div role="dialog" aria-modal="true" aria-label="回复演示帖子">
+    <article role="article" tabindex="-1" data-testid="tweet">
+      <div style="display:flex;flex-direction:row">
+        <div data-testid="Tweet-User-Avatar">
+          <div data-testid="UserAvatar-Container-demo_writer">
+            <a href="/demo_writer" role="link" tabindex="-1"><span aria-hidden="true">作者头像</span></a>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+          <div data-testid="User-Name">
+            <span>演示作者</span>
+            <span>@demo_writer</span>
+            <span>·</span>
+            <span>刚刚</span>
+          </div>
+          <div dir="auto" data-testid="tweetText">整理资料时，给笔记加上明确标题和来源，往往比换一个新工具更有用。</div>
+        </div>
+      </div>
+    </article>
+    <button type="button" dir="ltr" role="button">回复 @demo_writer</button>
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;flex-direction:row">
+        <div data-testid="UserAvatar-Container-demo_user"><a href="/demo_user" tabindex="-1"><span aria-hidden="true">用户头像</span></a></div>
+        <div data-testid="tweetTextarea_0_label" style="display:flex;flex-direction:column;flex:1;min-width:0">
+          <div class="public-DraftEditorPlaceholder-inner">发布你的回复</div>
+          <div data-testid="tweetTextarea_0RichTextInputContainer">
+            <div role="textbox" contenteditable="true" data-testid="tweetTextarea_0" tabindex="0"><div data-contents="true"><div data-block="true" data-offset-key="synthetic-0-0"><span data-offset-key="synthetic-0-0"><span data-text="true"><br></span></span></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div role="group" aria-label="回复操作"><button type="button" role="button">AI Generate</button><button type="button" data-testid="tweetButton">回复</button></div>
+    </div>
+  </div>
+</body>
+</html>
