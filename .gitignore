@@ -18,3 +18,9 @@ evidence/
 artifacts/
 *.zip
 *.tgz
+
+# Editable README animation: local output, history, and frame comments
+docs/demo/out/
+docs/demo/.om/
+docs/demo/.hyperframes/
+docs/demo/snapshots/

@@ -1,6 +1,6 @@
 # 第三方依赖
 
-运行时使用 Node.js 内置模块，无第三方运行依赖。测试直接使用 jsdom（MIT）。下表从锁文件生成，安装包附带的原始 LICENSE/NOTICE 文件继续适用，不由本项目 MIT 替代。
+浏览器扩展与可选本机桥接运行时使用浏览器／Node.js 内置模块，无第三方运行依赖。测试直接使用 jsdom（MIT）。下表从锁文件生成，安装包附带的原始 LICENSE/NOTICE 文件继续适用，不由本项目 MIT 替代。
 
 | 测试依赖 | 锁定版本 | 声明许可证 |
 | --- | --- | --- |
@@ -45,3 +45,14 @@
 | xmlchars | 2.2.0 | MIT |
 
 Draft.js 官方源码链接仅作为富文本行为的参考，见编辑器测试注释。合成页面没有打包 X 网页内容。新图标由内置 imagegen 生成，见 docs/BRANDING.md。
+
+## README 演示动画
+
+`docs/assets/readme-demo.gif`、`readme-demo.mp4` 与 `docs/demo/` 是独立的演示素材，不会打包进浏览器安装包。
+
+- huashu-motion 0.1.1 的 `om.js`：MIT；保留 [HUASHU-LICENSE](docs/demo/HUASHU-LICENSE)。
+- GSAP 3.14.2：单独的 Standard License；保留 [许可证说明](docs/demo/vendor/GSAP-LICENSE.txt) 和 [完整条款](docs/demo/vendor/GSAP-LICENSE.html)。
+- Inter、Noto Sans SC：SIL Open Font License 1.1；保留 [字体版权](docs/demo/assets/fonts/LICENSES.md) 和 [OFL](docs/demo/assets/fonts/OFL.txt)。
+- 项目图标、纯界面组件及编写的演示内容使用本项目 MIT 许可；未使用 huashu 的角色素材。
+
+The extension/bridge remain separate from the optional demo. Animation libraries and fonts keep their own licenses; see [demo notices](docs/demo/THIRD_PARTY.md) and [editing instructions](docs/demo/README.md).

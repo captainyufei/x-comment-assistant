@@ -3,3 +3,8 @@
 *.command text eol=lf
 *.ps1 text eol=crlf
 *.png binary
+
+# Keep vendored upstream libraries and legal notices intact.
+docs/demo/vendor/** -whitespace
+docs/demo/vendor/GSAP-LICENSE.html -text
+docs/demo/assets/fonts/OFL.txt -whitespace

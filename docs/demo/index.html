@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"intro1","type":"string","label":"开场第一行","default":"看懂原帖，","group":"文案"},{"id":"intro2","type":"string","label":"开场第二行","default":"再接一句。","group":"文案"},{"id":"outro1","type":"string","label":"结束第一行","default":"AI 起草，","group":"文案"},{"id":"outro2","type":"string","label":"结束第二行","default":"由你开口。","group":"文案"}]'>
+<head><meta charset="utf-8"><meta name="viewport" content="width=1600,height=900"><title>X Comment Assistant · README Demo</title>
+<script src="vendor/gsap.min.js"></script><script src="vendor/om.js"></script>
+
+<style>
+*{box-sizing:border-box}html,body{margin:0;background:#f5f7f4;overflow:hidden;font-family:Inter,"Noto Sans SC",sans-serif;color:#142d29}#film{position:relative;width:1600px;height:900px;overflow:hidden}#ground{position:absolute;inset:0;background:#f5f7f4}.brand{position:absolute;left:72px;top:45px;display:flex;align-items:center;gap:16px;font-size:26px;font-weight:700;letter-spacing:-.7px}.brand img{width:46px;height:46px}.demo-note{position:absolute;right:70px;top:60px;font-size:17px;color:#52685c}.copy{position:absolute;left:75px;top:262px;width:520px}.copy h1{font-size:68px;line-height:1.3;font-weight:700;letter-spacing:-3px;margin:25px 0 28px}.copy h1 span{display:block}.copy p{font-size:25px;line-height:1.8;margin:0;color:#4d665b;max-width:465px}.eyebrow{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;color:#087e64}.eyebrow b{display:grid;place-items:center;background:#e0ece5;width:42px;height:32px;border-radius:9px;font-size:17px}#copy-edit h1{font-size:57px;letter-spacing:-2px}.copy .four{color:#087e64}.copy .details{font-size:19px;margin-top:26px;color:#52685c}.footer{position:absolute;left:75px;bottom:68px;display:flex;align-items:center;gap:14px;font-size:19px;color:#52685c}.footer span{width:6px;height:6px;border-radius:50%;background:#a3b8ab}.window{position:absolute;left:650px;top:128px;width:880px;height:694px;border:1px solid #dfe7e0;border-radius:24px;background:#fff;box-shadow:0 28px 70px #16332913;overflow:hidden;transform-origin:center center}.toolbar{height:48px;background:#fafbfa;border-bottom:1px solid #e9eeea;display:flex;align-items:center;padding:0 24px;gap:8px}.toolbar i{width:9px;height:9px;border-radius:50%;background:#d3ddd6}.address{margin-left:25px;font-size:15px;color:#5e7064}.close{margin-left:auto;font-size:21px;color:#52635a}.post{position:absolute;left:34px;right:34px;top:72px;display:flex;gap:15px}.avatar{flex-shrink:0;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;font-size:22px;background:#e6efe8;color:#336b57;font-weight:700}.post-main{flex:1}.author{font-size:18px;font-weight:700;color:#152a23}.handle{font-weight:500;color:#5e7064;margin-left:8px;font-size:16px}.post-text{font-family:"Noto Sans SC",sans-serif;font-size:23px;line-height:1.7;margin:10px 0 8px;max-width:720px;font-weight:500}.reply-to{font-size:15px;color:#5e7064;margin-top:10px}.reply-to span{color:#086e9f}.editor{position:absolute;left:34px;right:34px;top:239px;display:flex;gap:15px;align-items:flex-start}.self{background:#e3ece5;color:#426c58;font-size:16px}.draft{font-family:"Noto Sans SC",sans-serif;width:738px;min-height:46px;color:#5e7064;font-size:23px;line-height:1.6;font-weight:500}.draft.filled{color:#172c24;font-size:21px}.draft .caret{display:inline-block;width:2px;height:24px;background:#087e64;vertical-align:-3px;margin-left:3px}.assistant{position:absolute;left:77px;right:30px;top:312px}.native-actions{position:absolute;right:30px;bottom:20px;display:flex;align-items:center;gap:18px}.native-tools{font-size:21px;color:#607467;letter-spacing:17px}.send{display:inline-block;border-radius:24px;background:#d6dcd7;color:#4c6053;font-size:19px;font-weight:700;padding:11px 24px}.send.ready{background:#162a22;color:#fff}.manual-pill{position:absolute;left:77px;bottom:24px;display:flex;gap:8px;align-items:center;color:#087a61;background:#e6f0e9;border:1px solid #c3dacc;border-radius:20px;font-size:16px;padding:8px 15px}.manual-pill svg{width:18px;height:18px}.source-line{position:absolute;left:671px;bottom:41px;font-size:15px;color:#5d6f63}.cursor{position:absolute;left:0;top:0;width:40px;height:46px;filter:drop-shadow(0 3px 4px #142d292e);z-index:20}.click-ring{position:absolute;left:0;top:0;width:44px;height:44px;border:3px solid #087e64;border-radius:50%;opacity:0;z-index:19}.select-outline{position:absolute;left:729px;top:619px;width:769px;height:97px;border:3px solid #087e64;border-radius:12px;opacity:0;pointer-events:none;z-index:15}.end-models{display:flex;align-items:center;gap:10px;font-size:20px;color:#344e43;margin-top:25px}.end-models strong{padding:8px 12px;border:1px solid #c8d7cd;border-radius:9px;font-weight:500}.reset-cover{position:absolute;inset:0;background:#f5f7f4;opacity:0;pointer-events:none;z-index:30}
+</style><style id="om-fonts">
+@font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/NotoSansSC-500.woff") format("woff"); font-weight: 500; font-style: normal; }
+@font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/NotoSansSC-700.woff") format("woff"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/NotoSansSC-800.woff") format("woff"); font-weight: 800; font-style: normal; }
+@font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/NotoSansSC-900.woff") format("woff"); font-weight: 900; font-style: normal; }
+@font-face { font-family: "Inter"; src: url("assets/fonts/Inter-var.woff") format("woff"); font-weight: 100 900; font-style: normal; }
+</style>
+</head><body>
+<div id="film" data-composition-id="xca-demo" data-start="0" data-duration="20" data-width="1600" data-height="900" data-fps="60">
+<div id="ground"></div>
+<header class="brand" data-om-id="brand"><img src="assets/logo.png" alt=""><span>X Comment Assistant</span></header>
+<div class="demo-note" data-om-id="disclosure">界面演示 · 示例内容 · 流程加速</div>
+<div id="copy-intro" class="copy" data-om-id="intro-copy"><div class="eyebrow"><b>01</b> 从原帖开始</div><h1><span data-var-text="intro1">看懂原帖，</span><span data-var-text="intro2">再接一句。</span></h1><p>为 X 回复准备四条中文草稿。</p></div>
+<div id="copy-generate" class="copy" data-om-id="generate-copy"><div class="eyebrow"><b>02</b> 按需生成</div><h1><span>你点生成，</span><span>它才动笔。</span></h1><p>打开回复框不会自动调用模型。</p></div>
+<div id="copy-choices" class="copy" data-om-id="choices-copy"><div class="eyebrow"><b>03</b> 一次返回</div><h1><span><em class="four" style="font-style:normal">四条候选，</em></span><span>不同接法。</span></h1><p>按原帖匹配风格，<span style="display:block">挑一句你愿意说的话。</span></p></div>
+<div id="copy-edit" class="copy" data-om-id="edit-copy"><div class="eyebrow"><b>04</b> 选择与修改</div><h1><span>挑一句，</span><span>再改成你的话。</span></h1><p>AI 提供草稿，判断留给你。</p></div>
+<div id="copy-end" class="copy" data-om-id="end-copy"><div class="eyebrow"><b>✓</b> Your replies. Your call.</div><h1><span data-var-text="outro1">AI 起草，</span><span data-var-text="outro2">由你开口。</span></h1><p>下载插件 · 配好模型 · 开始回复</p><div class="end-models"><strong>Chrome</strong><strong>Edge</strong><span>MIT · Open source</span></div></div>
+<div class="footer" data-om-id="footer"><span></span>Bring your own model<span></span>No automatic posting</div>
+<section id="product-window" class="window" data-om-id="product-window" data-layout-allow-overlap>
+<div class="toolbar"><i></i><i></i><i></i><div class="address">x.com / 回复</div><span class="close">×</span></div>
+<article class="post" data-om-id="source-post"><div class="avatar">P</div><div class="post-main"><div class="author">产品笔记<span class="handle">@product_note · 示例</span></div><p class="post-text">做产品，先问用户上一次遇到问题时怎么解决，<span style="display:block">比直接问他想要什么功能更有用。</span></p><div class="reply-to">回复 <span>@product_note</span></div></div></article>
+<div class="editor" data-om-id="reply-editor"><div class="avatar self">You</div><div id="draft" class="draft">发布你的回复</div></div>
+<div id="assistant-host" class="assistant" data-om-id="assistant-panel"></div>
+<div id="manual-pill" class="manual-pill" data-om-id="manual-send"><svg viewBox="0 0 20 20" fill="none"><path d="m4 10 4 4 8-8" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>最后由你点击「回复」</div>
+<div class="native-actions"><span class="native-tools">▧ ♧</span><span id="send-button" class="send">回复</span></div>
+</section>
+<div class="source-line" data-om-id="source-note">基于真实插件组件重建 · 不访问 X，不调用模型</div>
+<div id="select-outline" class="select-outline"></div>
+<div id="click-ring" class="click-ring"></div>
+<svg id="cursor" class="cursor" viewBox="0 0 40 46"><path d="M4 3 34 26 22 29 16 41 12 31 4 35Z" fill="#142d29" stroke="white" stroke-width="2.5" stroke-linejoin="round"/></svg>
+<div id="reset-cover" class="reset-cover"></div>
+</div>
+<script src="assets/plugin/reply-style-catalog.js"></script><script src="assets/plugin/composer-ui.js"></script>
+<script>
+const candidates=[
+ {style:'witty',replyStyle:'agree',text:'问上一次怎么解决，细节更实在；问想要什么，容易聊着聊着就成了许愿。'},
+ {style:'humor',replyStyle:'playful',text:'问想要什么，人人都是产品经理；问上次怎么解决，才发现还在用 Excel 硬扛。'},
+ {style:'insight',replyStyle:'professional',text:'还可以追问试过哪些办法、付出了什么成本，区分偶尔不便和真正值得解决的问题。'},
+ {style:'story',replyStyle:'practical',text:'下次访谈，可以请对方直接还原一次：从哪开始、卡在哪、最后怎么绕过去。'}
+];
+const host=document.querySelector('#assistant-host');host.style.width='773px';
+const noop=()=>{};
+const view=__JieYiJuUI.mount(host,{generate:noop,retry:noop,cancel:noop,openSettings:noop,choose:noop,insert:noop,copy:noop});
+const style=document.createElement('style');style.textContent=':host{font-family:Inter,"Noto Sans SC",sans-serif;margin:0;font-size:18px}.head{padding:14px 16px;gap:9px}.title{font-size:20px}.mark{width:28px;height:28px;font-size:14px}.brand{font-size:11px;max-width:155px}.primary{font-size:16px;padding:9px 17px;white-space:nowrap}.link{font-size:14px}.body{padding:0 16px 12px}.status{font-size:15px;line-height:1.5;margin:7px 0}.hint{font-size:13px}.choices{max-height:140px;scrollbar-width:none;gap:8px}.choices::-webkit-scrollbar{display:none}.choice{padding:9px 12px 24px;border-radius:10px}.choice-text{font-family:"Noto Sans SC",sans-serif;font-size:22px;line-height:1.6;font-weight:500}.choice-label{font-size:18px;margin-bottom:4px}.copy{font-size:12px}.batch-tone{font-size:14px}.tag,.arrow,.link{color:#086e9f}.primary{background:#086e9f}.actions{margin:6px 0}.candidate{width:100%}';host.shadowRoot.append(style);
+const tl=gsap.timeline({paused:true});window.__timelines=window.__timelines||{};window.__timelines['xca-demo']=tl;
+['intro','generate','choices','edit','end'].forEach((id,i)=>{const start=[0,3.2,6.2,12.6,16.5][i],end=[3.2,6.2,12.6,16.5,19.1][i];tl.addLabel('scene:'+id,start);if(i)tl.fromTo('#copy-'+id,{opacity:0,y:12},{opacity:1,y:0,duration:.42,ease:'sine.inOut',immediateRender:false},start);if(end<19.1)tl.to('#copy-'+id,{opacity:0,y:-6,duration:.26,ease:'sine.inOut',immediateRender:false},end-.26);});
+gsap.set(['#copy-generate','#copy-choices','#copy-edit','#copy-end'],{opacity:0,y:12});
+// One fixed-centre push and pull. Content reframing happens after each camera move.
+tl.fromTo('#product-window',{x:0,y:0,scale:1},{x:0,y:-8,scale:1.05,duration:1.1,ease:'sine.inOut'},5.0);
+tl.to('.post',{opacity:0,y:-18,duration:.4,ease:'sine.inOut'},6.2);
+tl.to('.editor',{opacity:0,duration:.3,ease:'sine.inOut'},6.2);
+tl.to('#assistant-host',{y:-222,duration:.9,ease:'sine.inOut'},6.2);
+tl.to('#product-window',{x:0,y:0,scale:1,duration:1.05,ease:'sine.inOut'},12.6);
+tl.to('#assistant-host',{y:0,duration:.9,ease:'sine.inOut'},13.75);
+tl.to('.post',{opacity:1,y:0,duration:.5,ease:'sine.inOut'},13.75);
+tl.to('.editor',{opacity:1,duration:.45,ease:'sine.inOut'},14.05);
+// Loop the content while the logo and window shell remain visible.
+const loopContent=['#copy-end','.post','.editor','#assistant-host','.native-actions','#cursor'];
+tl.to(loopContent,{opacity:0,duration:.25,ease:'sine.inOut'},19.1);
+tl.set(['#copy-generate','#copy-choices','#copy-edit','#copy-end'],{opacity:0},19.39);
+tl.set('#copy-intro',{opacity:0,y:0},19.39);
+tl.set('#product-window',{x:0,y:0,scale:1},19.39);
+tl.set('.post',{y:0},19.39);tl.set('#assistant-host',{y:0},19.39);
+tl.fromTo(['#copy-intro','.post','.editor','#assistant-host','.native-actions','#cursor'],{opacity:0},{opacity:1,duration:.44,ease:'sine.inOut',immediateRender:false},19.4);
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const mix=(a,b,t)=>a+(b-a)*t;
+const smooth=t=>{const p=clamp(t);return p*p*p*(p*(p*6-15)+10);};
+const gentle=t=>(1-Math.cos(Math.PI*clamp(t)))/2;
+let lastPhase='';
+const edited='下次访谈，可以请对方直接还原一次：从哪开始、卡在哪、最后怎么绕过去。细节比功能清单更有用。';
+function draw(time){
+ const t=time>=19.38?0:time,phase=t<4.45?'idle':t<6.2?'busy':t<12.6?'results':t<16.5?'edit':'end';
+ if(phase!==lastPhase){
+  if(phase==='idle')view.setState({phase:'idle',message:'按原帖匹配风格，点击后一次生成四条候选。',candidates:[]});
+  else if(phase==='busy')view.setState({phase:'loading',message:'正在生成四条回复…',candidates:[],canCancel:true});
+  else view.setState({phase:'ready',message:phase==='results'?'四条候选已生成，挑一句填入或复制。':'已填入。可以修改，再点击 X 的“回复”。',candidates,tonePreset:'auto'});
+  lastPhase=phase;
+ }
+ const draft=document.querySelector('#draft');
+ const filled=phase==='edit'||phase==='end';draft.className='draft'+(filled?' filled':'');
+ if(filled){const text=phase==='end'?edited:t<15.2?candidates[3].text:edited.slice(0,Math.floor(mix(candidates[3].text.length,edited.length,smooth((t-15.2)/.8))));draft.textContent=text;}else draft.textContent='发布你的回复';
+ document.querySelector('#send-button').className='send'+(filled?' ready':'');
+ const choiceList=host.shadowRoot.querySelector('.choices');
+ if(choiceList){
+  const listHeight=phase==='results'?mix(140,364,gentle((t-6.2)/.9)):phase==='edit'?mix(364,140,gentle((t-13.75)/.9)):140;
+  choiceList.style.maxHeight=listHeight+'px';
+  const max=Math.max(0,choiceList.scrollHeight-choiceList.clientHeight);
+  choiceList.scrollTop=phase==='results'?max*smooth((t-9.1)/2.5):filled?max:0;
+ }
+ const panelBody=host.shadowRoot.querySelector('.body'),collapseButton=host.shadowRoot.querySelector('.head .link');
+ const collapse=phase==='edit'?smooth((t-14.75)/.3):phase==='end'?1:0;
+ panelBody.hidden=false;panelBody.style.maxHeight='';panelBody.style.paddingBottom='';
+ const bodyHeight=panelBody.scrollHeight;
+ panelBody.style.overflow=collapse>0?'hidden':'';
+ panelBody.style.opacity=String(1-collapse);
+ panelBody.style.maxHeight=collapse>0?Math.max(0,bodyHeight*(1-collapse))+'px':'';
+ panelBody.style.paddingBottom=collapse>0?(12*(1-collapse))+'px':'';
+ panelBody.hidden=collapse>=1;collapseButton.textContent=collapse>=1?'展开':'收起';
+ document.querySelector('#manual-pill').style.opacity=phase==='end'?String(1-smooth((t-19.1)/.25)):'0';
+ const filmRect=document.querySelector('#film').getBoundingClientRect();
+ const point=(el,fx=.5,fy=.5)=>{const r=el.getBoundingClientRect();return [r.left-filmRect.left+r.width*fx,r.top-filmRect.top+r.height*fy];};
+ const selected=host.shadowRoot.querySelectorAll('.choice')[3];
+ const generate=point(host.shadowRoot.querySelector('.head .primary'));
+ const choose=selected?point(selected.querySelector('.arrow')||selected,.5,.5):[1450,675];
+ const fold=point(collapseButton);
+ const edit=point(draft,.74,0);edit[1]+=22; // Fixed first-line target: typing a new line must not move the pointer.
+ const send=point(document.querySelector('#send-button'),-.3,.5);
+ const park=[1540,840];
+ const move=(from,to,start,duration)=>{const p=smooth((t-start)/duration);return [mix(from[0],to[0],p),mix(from[1],to[1],p)];};
+ let cursorPoint=park;
+ if(t>=2.6&&t<4.8)cursorPoint=move(park,generate,2.6,1.3);
+ else if(t>=4.8&&t<5.7)cursorPoint=move(generate,park,4.8,.7);
+ else if(t>=11.65&&t<13.65)cursorPoint=move(park,choose,11.65,.85);
+ else if(t>=13.65&&t<14.8)cursorPoint=move(choose,fold,13.65,1.1);
+ else if(t>=14.8&&t<16.5)cursorPoint=move(fold,edit,14.8,.55);
+ else if(t>=16.5)cursorPoint=move(edit,send,16.5,.8);
+ const [x,y]=cursorPoint;
+ const cursor=document.querySelector('#cursor');cursor.style.transform=`translate(${x}px,${y}px)`;
+ const ring=document.querySelector('#click-ring'),clickAt=t>=14.75?14.75:t>=12.6?12.6:4.45,age=t-clickAt;
+ ring.style.transform=`translate(${x-16}px,${y-15}px) scale(${mix(.45,1.45,clamp(age/.42))})`;ring.style.opacity=age>=0&&age<.42?String(1-age/.42):'0';
+ const stroke=document.querySelector('#select-outline');
+ if(phase==='results'&&selected){const r=selected.getBoundingClientRect(),f=document.querySelector('#film').getBoundingClientRect();Object.assign(stroke.style,{left:(r.left-f.left)+'px',top:(r.top-f.top)+'px',width:r.width+'px',height:r.height+'px'});}
+ stroke.style.opacity=phase==='results'&&t>=12.25?String(clamp((t-12.25)/.15)):'0';
+}
+OM.clock(tl,draw,20);draw(0);
+</script></body></html>

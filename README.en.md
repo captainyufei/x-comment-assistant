@@ -3,11 +3,11 @@
 <p align="center"><a href="README.md">简体中文</a> · <strong>English</strong></p>
 <p align="center"><a href="https://github.com/captainyufei/x-comment-assistant/releases/latest/download/x-comment-assistant.zip">Download the extension</a> · <a href="docs/USAGE.md">User guide (Chinese)</a> · <a href="docs/LOCAL_AGENT.md">Optional local agents (Chinese)</a></p>
 
-<p align="center"><img src="docs/assets/readme-hero.png" width="100%" alt="X Comment Assistant: one source post becomes four Chinese reply drafts; choose, edit and send yourself"></p>
+<p align="center"><a href="https://github.com/captainyufei/x-comment-assistant/raw/refs/heads/main/docs/assets/readme-demo.mp4"><img src="docs/assets/readme-demo.gif" width="100%" alt="X Comment Assistant demo: click Generate, choose one of four Chinese drafts, edit it and send manually"></a></p>
 
 <p align="center">Turn a post into four reply drafts. Pick one, make it yours, and send it yourself.</p>
 
-<p align="center"><sub>Conceptual workflow illustration, not an actual product screenshot.</sub></p>
+<p align="center"><sub>Authored demo content with accelerated pacing; the GIF is a 25 fps compatibility preview.</sub><br><a href="https://github.com/captainyufei/x-comment-assistant/raw/refs/heads/main/docs/assets/readme-demo.mp4">Watch the smoother 60 fps video</a> · <a href="docs/demo/README.md">Edit the animation source</a></p>
 
 A Chrome / Edge extension that adds a reply assistant beside the X reply composer. Use your own model API, a running local model service, or an optional local agent.
 
@@ -128,4 +128,4 @@ CI uses no real model keys and sends no X comments. Public source excludes perso
 
 ## License
 
-[MIT](LICENSE). Provider APIs, CLI tools, and X retain their own account, billing, and usage terms.
+[MIT](LICENSE). The demo’s GSAP and fonts retain their own licenses; see [demo third-party notices](docs/demo/THIRD_PARTY.md). Provider APIs, CLI tools, and X retain their own account, billing, and usage terms.

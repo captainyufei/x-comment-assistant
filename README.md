@@ -2,11 +2,11 @@
 
 <p align="center"><a href="README.md">简体中文</a> · <a href="README.en.md">English</a></p>
 
-<p align="center"><img src="docs/assets/readme-hero.png" width="100%" alt="X Comment Assistant：从一条原帖生成四条中文候选，由你挑选、编辑和发送"></p>
+<p align="center"><a href="https://github.com/captainyufei/x-comment-assistant/raw/refs/heads/main/docs/assets/readme-demo.mp4"><img src="docs/assets/readme-demo.gif" width="100%" alt="X Comment Assistant 动态演示：点击生成四条中文候选，挑选、编辑后自行发送"></a></p>
 
 <p align="center">在 X 回复框旁，一次生成四条中文草稿，由你挑选、编辑和发送。</p>
 
-<p align="center"><sub>工作流程概念插图；实际功能以使用说明为准。</sub></p>
+<p align="center"><sub>交互演示使用本地示例内容，节奏已加速；GIF 为 25 帧兼容预览。</sub><br><a href="https://github.com/captainyufei/x-comment-assistant/raw/refs/heads/main/docs/assets/readme-demo.mp4">观看更流畅的 60 帧视频</a> · <a href="docs/demo/README.md">编辑动画源码</a></p>
 
 <p align="center"><a href="https://github.com/captainyufei/x-comment-assistant/releases/latest/download/x-comment-assistant.zip">下载浏览器安装包</a> · <a href="docs/USAGE.md">使用教程</a> · <a href="docs/LOCAL_AGENT.md">可选本地 Agent</a></p>
 
@@ -117,4 +117,4 @@ CI 不使用真实模型密钥，不发送 X 评论。公开源码不包含个�
 
 ## 许可证
 
-使用 [MIT License](LICENSE)。模型服务、CLI 与 X 的账户、计费和使用条款由各自服务商管理。
+使用 [MIT License](LICENSE)。演示动画中的 GSAP 和字体沿用各自许可，见 [第三方声明](docs/demo/THIRD_PARTY.md)。模型服务、CLI 与 X 的账户、计费和使用条款由各自服务商管理。
