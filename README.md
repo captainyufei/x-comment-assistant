@@ -1,8 +1,12 @@
-# X 评论助手
+# X Comment Assistant
 
-<p align="center"><img src="docs/assets/logo.png" width="112" alt="X 评论助手 logo"></p>
+<p align="center"><a href="README.md">简体中文</a> · <a href="README.en.md">English</a></p>
+
+<p align="center"><img src="docs/assets/readme-hero.png" width="100%" alt="X Comment Assistant：从一条原帖生成四条中文候选，由你挑选、编辑和发送"></p>
 
 <p align="center">在 X 回复框旁，一次生成四条中文草稿，由你挑选、编辑和发送。</p>
+
+<p align="center"><sub>工作流程概念插图；实际功能以使用说明为准。</sub></p>
 
 <p align="center"><a href="https://github.com/captainyufei/x-comment-assistant/releases/latest/download/x-comment-assistant.zip">下载浏览器安装包</a> · <a href="docs/USAGE.md">使用教程</a> · <a href="docs/LOCAL_AGENT.md">可选本地 Agent</a></p>
 
@@ -15,7 +19,7 @@
 1. [下载 `x-comment-assistant.zip`](https://github.com/captainyufei/x-comment-assistant/releases/latest/download/x-comment-assistant.zip)，解压到长期保留的文件夹。
 2. 打开 Chrome 的 `chrome://extensions` 或 Edge 的 `edge://extensions`，开启「开发者模式」。
 3. 点「加载已解压的扩展」，选择解压后的 **`XCommentAssistant` 文件夹**。这个文件夹内直接有 `manifest.json`。
-4. 从工具栏拼图菜单找到「X 评论助手」，可将图标固定到工具栏。
+4. 从工具栏拼图菜单找到「X Comment Assistant」，可将图标固定到工具栏。
 
 请下载上面的发行安装包。仓库的 **Code → Download ZIP** 是开发源码，目录结构不同。
 

@@ -874,7 +874,7 @@ test('authentication, missing tasks, extension reload and source errors never re
 
 test('a protocol update requires reload without lookup retries, repeat generation or losing the draft', async t => {
   for (const failureAt of ['generate', 'poll', 'failed-job']) await t.test(failureAt, async () => {
-    const error = {ok: false, code: 'EXTENSION_UPDATE_REQUIRED', error: '请重新加载接一句，再刷新 X。'};
+    const error = {ok: false, code: 'EXTENSION_UPDATE_REQUIRED', error: '请重新加载 X Comment Assistant，再刷新 X。'};
     const h = harness({fastPolling: true, intercept: message => {
       if (message.type === 'inlineGenerate') {
         if (failureAt === 'generate') return error;

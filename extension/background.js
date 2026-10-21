@@ -423,7 +423,7 @@ async function discardInlineSession(id) {
 }
 
 function assertEnabled() {
-  if (!popupPreferences.enabled) throw bridgeError("X 评论助手已暂停。请点击工具栏图标开启，再点击生成。", "ASSISTANT_PAUSED");
+  if (!popupPreferences.enabled) throw bridgeError("X Comment Assistant 已暂停。请点击工具栏图标开启，再点击生成。", "ASSISTANT_PAUSED");
 }
 
 async function dispatchPopup(message) {
@@ -757,7 +757,7 @@ chrome.tabs.onRemoved?.addListener(tabId => {
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll().then(() => chrome.contextMenus.create({
-    id: MENU_ID, title: "打开 X 评论助手设置", contexts: ["selection"],
+    id: MENU_ID, title: "打开 X Comment Assistant设置", contexts: ["selection"],
     documentUrlPatterns: ["https://x.com/*", "https://twitter.com/*"]
   })).catch(() => {});
 });

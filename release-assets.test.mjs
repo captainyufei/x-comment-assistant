@@ -7,10 +7,14 @@ import {RUNTIME_FILES} from './service-manager.mjs';
 test('branded extension ships transparent PNGs in every advertised icon size and keeps release versions aligned', async () => {
   const manifest = JSON.parse(await readFile(new URL('extension/manifest.json', import.meta.url), 'utf8'));
   const pkg = JSON.parse(await readFile(new URL('package.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.name, 'X 评论助手');
-  assert.equal(manifest.short_name, 'X 评论助手');
+  const lock = JSON.parse(await readFile(new URL('package-lock.json', import.meta.url), 'utf8'));
+  assert.equal(manifest.name, 'X Comment Assistant');
+  assert.equal(manifest.short_name, 'X Comment Assistant');
   assert.equal(manifest.version, VERSION);
   assert.equal(pkg.version, VERSION);
+  assert.equal(lock.version, VERSION);
+  assert.equal(lock.packages[''].version, VERSION);
+  assert.ok(manifest.action.default_title.startsWith('X Comment Assistant'));
   assert.deepEqual(manifest.action.default_icon, manifest.icons);
   for (const size of [16,32,48,128]) {
     const file = manifest.icons[size];

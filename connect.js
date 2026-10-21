@@ -8,7 +8,7 @@ copyButton.addEventListener('click', async () => {
   copyButton.disabled = true;
   try {
     await navigator.clipboard.writeText(pairingInput.value);
-    copyStatus.textContent = '已复制。回到「X 评论助手」连接页粘贴并点击“连接”，再回到 X。';
+    copyStatus.textContent = '已复制。回到「X Comment Assistant」连接页粘贴并点击“连接”，再回到 X。';
   } catch {
     copyStatus.textContent = '复制未成功。点击“显示配对码”，选中配对码手动复制。';
   } finally { copyButton.disabled = false; }

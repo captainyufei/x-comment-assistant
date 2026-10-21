@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+<title id="title">X Comment Assistant</title><desc id="desc">One post, four Chinese reply drafts. Choose, edit and send yourself. Conceptual workflow illustration.</desc>
+<rect width="1200" height="600" rx="28" fill="#f5f7f4"/>
+<image href="reply-workflow.png" x="570" y="0" width="630" height="600" preserveAspectRatio="xMidYMid slice"/>
+<g id="brand" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+<image href="../logo.png" x="56" y="54" width="48" height="48"/>
+<text x="118" y="85" font-size="20" font-weight="650" fill="#087e64">YOUR REPLIES. YOUR CALL.</text>
+<text x="56" y="183" font-size="60" font-weight="750" letter-spacing="-2" fill="#142d29">X Comment</text>
+<text x="56" y="251" font-size="60" font-weight="750" letter-spacing="-2" fill="#142d29">Assistant</text>
+<text x="58" y="318" font-size="27" fill="#344c46">One post. Four reply drafts.</text>
+<text x="58" y="357" font-size="27" fill="#344c46">Choose. Edit. Send.</text>
+<rect x="58" y="404" width="278" height="45" rx="22" fill="#e2eee7"/>
+<text x="78" y="434" font-size="20" font-weight="600" fill="#087e64">AI drafts. You decide.</text>
+<text x="58" y="520" font-size="18" fill="#647773">Chrome / Edge · Bring your own model</text>
+<text x="58" y="548" font-size="18" fill="#647773">Chinese reply drafts · Open source</text>
+</g></svg>

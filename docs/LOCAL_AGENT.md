@@ -8,7 +8,7 @@
 
 ## 准备
 
-- 已安装并加载「X 评论助手」浏览器扩展。
+- 已安装并加载「X Comment Assistant」浏览器扩展。
 - Node.js 20+，可从 [Node.js 官网](https://nodejs.org/en/download) 安装适合系统的版本。
 - 自行安装并登录 Codex 或 Claude Code，先在自己的终端确认 CLI 可用。本项目不替你安装或登录。
 - 一份**完整源码**，因为用户 ZIP 只含浏览器需要的文件，不含桥接运行文件。
@@ -30,7 +30,7 @@ node --version
 
 ## 取得当前扩展 ID
 
-在 `chrome://extensions` 或 `edge://extensions` 中，开启开发者模式，找到「X 评论助手」，复制其 **32 位扩展 ID**。
+在 `chrome://extensions` 或 `edge://extensions` 中，开启开发者模式，找到「X Comment Assistant」，复制其 **32 位扩展 ID**。
 
 ID 是公开安装标识，不是 API Key；不要将密钥写入信任配置。Chrome、Edge、加载路径不同，ID 可能不同。当前一个桥接只信任一个明确 ID。
 

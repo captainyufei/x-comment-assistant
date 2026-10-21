@@ -2,6 +2,12 @@
 
 这里只记录可从当前代码确认的功能变化。测试、真实模型调用和实机验收分别报告，不把开发环境试用当作所有平台的承诺。
 
+## 0.13.1 · English name and bilingual README
+
+- 公共品牌名称统一为 X Comment Assistant，保留中文操作界面。
+- 新增英文 README 和中英文切换链接。
+- 新增展示一条原帖生成四条候选的 README 工作流程插图。
+
 ## 0.13.0 · 浏览器用户版
 
 - 提供 Releases 用户 ZIP：解压后直接加载 `XCommentAssistant` 文件夹，API 模式不需要 Node、终端、本机服务或配对。

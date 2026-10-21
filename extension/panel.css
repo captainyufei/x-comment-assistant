@@ -15,9 +15,10 @@ a { color: var(--teal); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .panel-shell { width: 100%; max-width: 620px; margin: 0 auto; padding: 24px 22px 20px; }
 .masthead { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-bottom: 19px; }
-.brand { display: flex; align-items: center; gap: 11px; }
+.brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.brand > div { min-width: 0; }
 .brand-mark { display: block; width: 39px; height: 39px; flex-shrink: 0; object-fit: contain; }
-h1 { font-size: 23px; line-height: 1.15; letter-spacing: -.055em; font-weight: 650; }
+h1 { font-size: 19px; line-height: 1.2; letter-spacing: -.025em; font-weight: 650; overflow-wrap: normal; }
 .title-dot { color: var(--gold); margin-left: 2px; }
 .brand p { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: .08em; }
 .icon-button { border: 1px solid var(--line); background: transparent; border-radius: 7px; padding: 6px 10px; font-size: 11px; }

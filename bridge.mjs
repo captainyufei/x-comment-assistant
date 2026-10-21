@@ -21,7 +21,7 @@ import {createWriterSettingsController,WriterSettingsError} from './writer-setti
 
 const execFileAsync = promisify(execFile);
 const ROOT = dirname(fileURLToPath(import.meta.url));
-export const VERSION = '0.13.0';
+export const VERSION = '0.13.1';
 export const REPLY_PROTOCOL = '4';
 export const PORT = 8769;
 export const WRITER_MODEL = 'gpt-6.1-sol';
@@ -412,10 +412,10 @@ export function createBridge({ runner, token = randomBytes(24).toString('hex'), 
         }
         if (autoConnectOrigin) {
           res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-          res.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Codex 已就绪 · X 评论助手</title><link rel="stylesheet" href="/connect.css"><main><p class="eyebrow">X 评论助手 · 中文 AI 回复</p><h1>回到 X，直接接话</h1><p>本机 Codex 已就绪。打开原帖的回复框，点击“生成回复”后才会连接并生成中文候选。</p><p>无需复制码或切换连接页。点一句填入，修改后由你发送。</p><p>更新插件后，请在扩展页重新加载一次，再刷新 X。保持本机服务运行即可。</p></main></html>`);
+          res.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Codex 已就绪 · X Comment Assistant</title><link rel="stylesheet" href="/connect.css"><main><p class="eyebrow">X Comment Assistant · 中文 AI 回复</p><h1>回到 X，直接接话</h1><p>本机 Codex 已就绪。打开原帖的回复框，点击“生成回复”后才会连接并生成中文候选。</p><p>无需复制码或切换连接页。点一句填入，修改后由你发送。</p><p>更新插件后，请在扩展页重新加载一次，再刷新 X。保持本机服务运行即可。</p></main></html>`);
           return;
         }
-        const html = `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>连接本机 Codex</title><link rel="stylesheet" href="/connect.css"><main><p class="eyebrow">YUFEI · LOCAL CODEX</p><h1>连接本机 Codex</h1><p>点击复制，回到「X 评论助手」连接页粘贴并连接，然后返回 X 回复框。</p><input id="pair-code" type="password" aria-label="本次配对码" readonly value="${token}" autocomplete="off"><div class="actions"><button id="copy-code" type="button">复制配对码</button><button id="show-code" type="button">显示配对码</button></div><p id="copy-status" role="status" aria-live="polite">配对码默认隐藏，只用于连接这台电脑上的服务。</p><p>服务关闭后配对码失效。重新启动或浏览器重启后，需要重新配对。</p><p>已登录：${runner.health.authentication === 'ChatGPT' ? 'ChatGPT' : 'Codex'} · ${String(runner.health.codexVersion ?? '').replace(/[<&>"']/g, '')}</p></main><script src="/connect.js" defer></script></html>`;
+        const html = `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>连接本机 Codex</title><link rel="stylesheet" href="/connect.css"><main><p class="eyebrow">YUFEI · LOCAL CODEX</p><h1>连接本机 Codex</h1><p>点击复制，回到「X Comment Assistant」连接页粘贴并连接，然后返回 X 回复框。</p><input id="pair-code" type="password" aria-label="本次配对码" readonly value="${token}" autocomplete="off"><div class="actions"><button id="copy-code" type="button">复制配对码</button><button id="show-code" type="button">显示配对码</button></div><p id="copy-status" role="status" aria-live="polite">配对码默认隐藏，只用于连接这台电脑上的服务。</p><p>服务关闭后配对码失效。重新启动或浏览器重启后，需要重新配对。</p><p>已登录：${runner.health.authentication === 'ChatGPT' ? 'ChatGPT' : 'Codex'} · ${String(runner.health.codexVersion ?? '').replace(/[<&>"']/g, '')}</p></main><script src="/connect.js" defer></script></html>`;
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(html); return;
       }
@@ -474,7 +474,7 @@ export function createBridge({ runner, token = randomBytes(24).toString('hex'), 
       if (!equalToken(req.headers['x-reply-bridge-token'])) throw new BridgeError('UNPAIRED', '配对码无效，请打开本机配对页重新连接。', 401);
       if(['/writer-settings','/writer-settings/read','/writer-settings/models'].includes(path)){
         if(req.headers['x-reply-protocol']!==REPLY_PROTOCOL)
-          throw new BridgeError('EXTENSION_UPDATE_REQUIRED','请重新加载“X 评论助手”，再保存模型配置。',409);
+          throw new BridgeError('EXTENSION_UPDATE_REQUIRED','请重新加载“X Comment Assistant”，再保存模型配置。',409);
         if(!writerSettings)throw new BridgeError('WRITER_SETTINGS_UNAVAILABLE','当前服务未启用模型设置，请更新本机服务。',503);
         if(path==='/writer-settings/models'){
           if(req.method!=='POST')throw new BridgeError('METHOD_NOT_ALLOWED','模型列表读取只接受 POST。',405);
@@ -518,7 +518,7 @@ export function createBridge({ runner, token = randomBytes(24).toString('hex'), 
       const needsReplyProtocol = (req.method === 'POST' && path === '/jobs') ||
         (req.method === 'GET' && /^\/jobs\/[^/]+$/.test(path));
       if (needsReplyProtocol && req.headers['x-reply-protocol'] !== REPLY_PROTOCOL) {
-        throw new BridgeError('EXTENSION_UPDATE_REQUIRED', '本机服务已更新，请在扩展页重新加载“X 评论助手”，刷新 X 后再生成。', 409);
+        throw new BridgeError('EXTENSION_UPDATE_REQUIRED', '本机服务已更新，请在扩展页重新加载“X Comment Assistant”，刷新 X 后再生成。', 409);
       }
       if (req.method === 'POST' && path === '/pair') {
         if (isExtension) pairedOrigin = origin;

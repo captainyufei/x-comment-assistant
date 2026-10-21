@@ -182,7 +182,7 @@ test('local opinion notes require explicit supported categories and bounded none
 test("manifest grants only supported API and loopback hosts with top-frame X composers", async () => {
   const manifest = JSON.parse(await readFile(new URL("./extension/manifest.json", import.meta.url), "utf8"));
   assert.equal(manifest.manifest_version, 3);
-  assert.equal(manifest.version, "0.13.0");
+  assert.equal(manifest.version, "0.13.1");
   assert.deepEqual(manifest.host_permissions, ["https://api.deepseek.com/*", "https://api.openai.com/*", "https://dashscope.aliyuncs.com/*", "https://dashscope-intl.aliyuncs.com/*", "https://*.cn-beijing.maas.aliyuncs.com/*", "https://api.moonshot.cn/*", "https://api.moonshot.ai/*", "https://api.minimax.cn/*", "https://api.minimax.io/*", "https://ark.cn-beijing.volces.com/*", "https://pbs.twimg.com/*", "http://127.0.0.1/*", "http://localhost/*"]);
   assert.ok(!manifest.host_permissions.some(host => ["<all_urls>", "https://*/*", "http://*/*"].includes(host)));
   for (const host of manifest.host_permissions) assert.ok(manifest.content_security_policy.extension_pages.includes(host.slice(0, -2).replace(/^(http:\/\/(?:localhost|127\.0\.0\.1))$/u, "$1:*")));

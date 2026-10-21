@@ -174,11 +174,11 @@
         if (!sessionId) {
           const initialized = await send({type: 'inlineInit', context});
           sessionId = initialized.sessionId; paired = initialized.paired;
-          if (initialized.enabled === false) throw Object.assign(new Error('X 评论助手已暂停。请点击工具栏图标开启，再点击生成。'), {code: 'ASSISTANT_PAUSED'});
+          if (initialized.enabled === false) throw Object.assign(new Error('X Comment Assistant 已暂停。请点击工具栏图标开启，再点击生成。'), {code: 'ASSISTANT_PAUSED'});
           if (closed) { send({type: 'inlineClose', sessionId}).catch(() => {}); return; }
         } else {
           const health = await send({type: 'inlineHealth'}); paired = health.paired;
-          if (health.enabled === false) throw Object.assign(new Error('X 评论助手已暂停。请点击工具栏图标开启，再点击生成。'), {code: 'ASSISTANT_PAUSED'});
+          if (health.enabled === false) throw Object.assign(new Error('X Comment Assistant 已暂停。请点击工具栏图标开启，再点击生成。'), {code: 'ASSISTANT_PAUSED'});
         }
         if (!stillCurrent()) return;
         if (!paired) { view.setState({phase: 'connect', message: '本机服务尚未连接。启动后点击“重试生成”。'}); return; }
@@ -194,7 +194,7 @@
       clearTimeout(pollTimer);
       if (closed) return;
       if (job?.status === 'failed' && job.code === 'EXTENSION_UPDATE_REQUIRED') {
-        handleError({code: job.code, message: job.error || '请重新加载“X 评论助手”并刷新 X 后再生成。'});
+        handleError({code: job.code, message: job.error || '请重新加载“X Comment Assistant”并刷新 X 后再生成。'});
         return;
       }
       if (job?.status === 'completed') {

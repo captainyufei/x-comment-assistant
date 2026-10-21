@@ -43,7 +43,7 @@ async function harness(t) {
     assert.equal(options.headers['X-Reply-Protocol'], '4');
     if (path === '/pair') return Response.json({paired: true});
     assert.equal(options.headers['X-Reply-Bridge-Token'], fixtureToken);
-    if ((path === '/jobs' && protocol.rejectCreate) || (path.startsWith('/jobs/') && options.method === 'GET' && protocol.rejectRead)) return Response.json({error: '本机服务已更新，请在扩展页重新加载“接一句”，刷新 X 后再生成。', code: 'EXTENSION_UPDATE_REQUIRED'}, {status: 409});
+    if ((path === '/jobs' && protocol.rejectCreate) || (path.startsWith('/jobs/') && options.method === 'GET' && protocol.rejectRead)) return Response.json({error: '本机服务已更新，请在扩展页重新加载“X Comment Assistant”，刷新 X 后再生成。', code: 'EXTENSION_UPDATE_REQUIRED'}, {status: 409});
     if (path === '/jobs') {
       submitted.push(JSON.parse(options.body));
       const job = {id: `job-${++jobCount}`, status: 'running'}; jobs.set(job.id, job); return Response.json({job});
@@ -132,7 +132,7 @@ test('protocol rejection retains the update code and never silently starts anoth
   h.protocol.rejectCreate = true;
   const createError = await h.message({type: 'inlineGenerate', sessionId});
   assert.equal(createError.ok, false); assert.equal(createError.code, 'EXTENSION_UPDATE_REQUIRED');
-  assert.match(createError.error, /重新加载“接一句”/); assert.equal(h.jobs.size, 0);
+  assert.match(createError.error, /重新加载“X Comment Assistant”/); assert.equal(h.jobs.size, 0);
   assert.equal(h.calls.filter(path => path === '/jobs').length, 1);
   await new Promise(resolve => setTimeout(resolve, 20));
   assert.equal(h.calls.filter(path => path === '/jobs').length, 1, 'there is no automatic retry or fallback');
@@ -152,7 +152,7 @@ test('protocol rejection retains the update code and never silently starts anoth
 test('a restored failed update job keeps its code and opening X sends no protocol or credential HTTP request', async t => {
   const h = await harness(t), sessionId = await h.initialize();
   const started = await h.message({type: 'inlineGenerate', sessionId});
-  Object.assign(h.jobs.get(started.job.id), {status: 'failed', code: 'EXTENSION_UPDATE_REQUIRED', error: '本机服务已更新，请重新加载接一句。'});
+  Object.assign(h.jobs.get(started.job.id), {status: 'failed', code: 'EXTENSION_UPDATE_REQUIRED', error: '本机服务已更新，请重新加载 X Comment Assistant。'});
   const failed = await h.message({type: 'inlinePoll', sessionId, id: started.job.id});
   assert.equal(failed.job.status, 'failed'); assert.equal(failed.job.code, 'EXTENSION_UPDATE_REQUIRED');
   await h.restore();

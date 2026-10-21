@@ -73,7 +73,7 @@ export async function buildExtension({source=SOURCE,output=join(ROOT,'dist')}={}
   entries.push({name:'XCommentAssistant/'+file,bytes});
  }
  entries.push({name:'XCommentAssistant/LICENSE',bytes:await readFile(join(ROOT,'LICENSE'))});
- entries.push({name:'XCommentAssistant/安装说明.txt',bytes:Buffer.from('X 评论助手 '+manifest.version+'\n\n1. 解压整个 ZIP，保留文件夹。\n2. Chrome 打开 chrome://extensions，Edge 打开 edge://extensions。\n3. 开启开发者模式，点“加载已解压的扩展”，选择本文件所在的 XCommentAssistant 文件夹（里面有 manifest.json）。\n4. 点工具栏插件图标 → 模型设置 → 填 API Key、选模型、保存。\n5. 刷新 X，从原帖点回复，再点“生成四条回复”，挑选并编辑后自己发送。\n\n云 API 不需要 Node、终端、本机服务、扩展 ID 或配对码。\n调用本地 Agent 需要另外安装可选桥接，说明见插件内帮助或项目文档。\nAPI Key 仅保存在当前浏览器本机，不跨设备同步；不要分享浏览器用户资料。\n\nhttps://github.com/captainyufei/x-comment-assistant\n')});
+ entries.push({name:'XCommentAssistant/安装说明.txt',bytes:Buffer.from('X Comment Assistant '+manifest.version+'\n\n1. 解压整个 ZIP，保留文件夹。\n2. Chrome 打开 chrome://extensions，Edge 打开 edge://extensions。\n3. 开启开发者模式，点“加载已解压的扩展”，选择本文件所在的 XCommentAssistant 文件夹（里面有 manifest.json）。\n4. 点工具栏插件图标 → 模型设置 → 填 API Key、选模型、保存。\n5. 刷新 X，从原帖点回复，再点“生成四条回复”，挑选并编辑后自己发送。\n\n云 API 不需要 Node、终端、本机服务、扩展 ID 或配对码。\n调用本地 Agent 需要另外安装可选桥接，说明见插件内帮助或项目文档。\nAPI Key 仅保存在当前浏览器本机，不跨设备同步；不要分享浏览器用户资料。\n\nhttps://github.com/captainyufei/x-comment-assistant\n')});
  await mkdir(output,{recursive:true});
  await rm(staging,{recursive:true,force:true});await mkdir(staging);
  for(const entry of entries){const local=entry.name.slice('XCommentAssistant/'.length);await mkdir(dirname(join(staging,local)),{recursive:true});await writeFile(join(staging,local),entry.bytes);}

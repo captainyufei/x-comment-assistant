@@ -349,7 +349,7 @@
     };
     const blob = new Blob([`${JSON.stringify(output, null, 2)}\n`], {type: 'application/json;charset=utf-8'});
     const url = URL.createObjectURL(blob);
-    const anchor = el('a'); anchor.href = url; anchor.download = `X 评论助手-回复试评-${new Date().toISOString().slice(0, 10)}.json`;
+    const anchor = el('a'); anchor.href = url; anchor.download = `X Comment Assistant-回复试评-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.append(anchor); anchor.click(); anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     $('global-status').textContent = dirty.size ? '已导出；其中包含尚未写入文件的意见。' : '已导出原帖、候选和你的反馈。';
