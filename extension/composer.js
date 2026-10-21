@@ -80,7 +80,8 @@
   }
   function errorState(view, error, canCancel = false, canRetry = true) {
     if (error.code === 'EXTENSION_UPDATE_REQUIRED') canRetry = false;
-    view.setState({phase: !canCancel && ['NOT_PAIRED', 'PAIRING_EXPIRED', 'BRIDGE_UNAVAILABLE', 'BRIDGE_TIMEOUT'].includes(error.code) ? 'connect' : 'error', message: error.message, canCancel, canRetry, retryLabel: canCancel ? '继续查看' : '重试'});
+    const phase = error.code === 'DIRECT_CONFIG_REQUIRED' ? 'settings' : !canCancel && ['NOT_PAIRED', 'PAIRING_EXPIRED', 'BRIDGE_UNAVAILABLE', 'BRIDGE_TIMEOUT'].includes(error.code) ? 'connect' : 'error';
+    view.setState({phase, message: error.message, canCancel, canRetry, retryLabel: canCancel ? '继续查看' : '重试'});
   }
   function createInstance(editor, scope, context, timeline) {
     const anchor = mountAnchor(editor, scope);
@@ -125,6 +126,11 @@
         job = null; requested = true; initialize();
       },
       retry: async () => { if (updateRequired || !requested || busy || inserting || cancelling) return; scan(); if (closed) return; if (job?.status === 'running') await resumePoll(); else await initialize(); },
+      openSettings: async () => {
+        if (busy || inserting || cancelling) return;
+        try { await send({type: 'inlineOpenSetup'}); }
+        catch (error) { handleError(error); }
+      },
       cancel: async () => {
         if (inserting || cancelling || !sessionId || !job?.id) return;
         clearTimeout(pollTimer); pollVersion++; cancelling = true; busy = true;
@@ -176,7 +182,7 @@
         }
         if (!stillCurrent()) return;
         if (!paired) { view.setState({phase: 'connect', message: '本机服务尚未连接。启动后点击“重试生成”。'}); return; }
-        view.setState({phase: 'loading', message: '正在生成四种回复…', candidates: []});
+        view.setState({phase: 'loading', message: '正在生成四条回复…', candidates: []});
         const result = await send({type: 'inlineGenerate', sessionId, style: selectedStyle});
         if (!stillCurrent()) return;
         job = result.job;

@@ -16,7 +16,7 @@ const candidates = [
 const compact = {contextStatus: 'sufficient', missingContext: ''};
 
 async function harness(t) {
-  const session = {}, local = {}, callbacks = {}, calls = [], submitted = [], jobs = new Map(), openedTabs = [];
+  const session = {}, local = {replyTransport: "bridge"}, callbacks = {}, calls = [], submitted = [], jobs = new Map(), openedTabs = [];
   const protocol = {rejectCreate: false, rejectRead: false};
   let jobCount = 0;
   const previousChrome = globalThis.chrome, previousFetch = globalThis.fetch;

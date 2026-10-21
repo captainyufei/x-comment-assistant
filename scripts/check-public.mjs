@@ -5,7 +5,7 @@ const root=dirname(dirname(fileURLToPath(import.meta.url)));
 const problems=[];let checked=0;
 const forbidden=/^(?:extension-trust\.json|writer-config\.json|writer-settings-state\.json|deepseek-api-key|review-feedback\.json|auth\.json|cookies\.json|\.env(?:\..*)?)$/;
 async function walk(dir){for(const entry of await readdir(dir,{withFileTypes:true})){
- if(['node_modules','.git'].includes(entry.name))continue;
+ if(['node_modules','.git','dist'].includes(entry.name))continue;
  const path=join(dir,entry.name);if(entry.isSymbolicLink()){problems.push('symlink: '+entry.name);continue;}
  if(entry.isDirectory()){if(['backups','evidence','coverage'].includes(entry.name))problems.push('private output: '+entry.name);else await walk(path);continue;}
  checked++;if(forbidden.test(entry.name))problems.push('local configuration: '+entry.name);

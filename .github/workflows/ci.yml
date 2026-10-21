@@ -23,4 +23,5 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm test
+      - run: npm run build:user
       - run: npm run check:public

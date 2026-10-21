@@ -7,7 +7,7 @@ test("background keeps pairing private, captures only on request, and restores s
   const source = {id: "1234567890123456789", text: "AI 回复要保留自己的观察。", url: "https://x.com/demo_user/status/1234567890123456789", authorName: "示例用户"};
   const callbacks = {};
   const session = {};
-  const local = {};
+  const local = {replyTransport: "bridge"};
   const events = [];
   const openedTabs = [];
   let jobStatus = "running";

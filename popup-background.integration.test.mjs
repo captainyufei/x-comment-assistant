@@ -11,7 +11,7 @@ const context={id:'1234567890123456789',url:'https://x.com/demo_user/status/1234
 const candidates=['witty','humor','insight','story'].map((style,i)=>({style,label:'回复角度',text:`中文候选 ${i}`}));
 
 async function harness(t,{preferences={style:'all',tone:'旧的自定义口吻',personalExperience:'用户自己提供的真实素材'},popupPreferences,authenticated=true,offline=false}={}){
-  const session={},local={replyPreferences:structuredClone(preferences),...(popupPreferences?{replyPopupPreferences:structuredClone(popupPreferences)}:{})};
+  const session={},local={replyTransport:"bridge",replyPreferences:structuredClone(preferences),...(popupPreferences?{replyPopupPreferences:structuredClone(popupPreferences)}:{})};
   const callbacks={},calls=[],jobs=new Map(); let nextJob=0,writer={provider:'deepseek',model:'deepseek-flash',keyConfigured:true,checkScope:'local'};
   let failSave=false,popupError=false;
   const oldChrome=globalThis.chrome,oldFetch=globalThis.fetch;
@@ -60,7 +60,8 @@ function assertPrivate(value){const text=JSON.stringify(value);assert.equal(text
 
 test('popup sender accepts only the exact same-extension toolbar document',()=>{
   assert.equal(isTrustedPopupSender(popup,runtimeId),true);
-  for(const sender of [panel,setup,content,{...popup,tab:{id:1}},{...popup,id:'b'.repeat(32)},{...popup,url:popup.url+'?secret=1'},{...popup,url:'https://x.com/popup.html'}])assert.equal(isTrustedPopupSender(sender,runtimeId),false);
+  assert.equal(isTrustedPopupSender({...popup,tab:{id:1},frameId:0},runtimeId),true);
+  for(const sender of [panel,setup,content,{...popup,tab:{id:1},frameId:1},{...popup,id:'b'.repeat(32)},{...popup,url:popup.url+'?secret=1'},{...popup,url:'https://x.com/popup.html'}])assert.equal(isTrustedPopupSender(sender,runtimeId),false);
 });
 
 test('popup opening checks local connection and projects public config without capturing or generating',async t=>{
@@ -76,7 +77,7 @@ test('popup opening checks local connection and projects public config without c
 
 test('only toolbar popup may read or change writer configuration; popup cannot invoke panel or inline capabilities',async t=>{
   const h=await harness(t);
-  for(const sender of [panel,setup,content,{...popup,tab:{id:3}},{...popup,id:'b'.repeat(32)},{...popup,url:popup.url+'?settings'}]){
+  for(const sender of [panel,setup,content,{...popup,tab:{id:3},frameId:1},{...popup,id:'b'.repeat(32)},{...popup,url:popup.url+'?settings'}]){
     for(const request of [{type:'popupState'},{type:'getWriterSettings'},{type:'saveWriterSettings',settings:{provider:'deepseek',model:'deepseek-flash',apiKey}},{type:'savePopupPreferences',enabled:false}])assert.equal((await h.message(request,sender)).code,'UNTRUSTED_SENDER');
   }
   for(const type of ['getState','capture','generate','inlineInit','inlineGenerate','saveSettings'])assert.equal((await h.message({type,context})).code,'UNTRUSTED_SENDER');
@@ -165,7 +166,7 @@ test('tone request bounds preserve stored custom text and public projections exc
 
 test('model discovery is popup-only, uses authenticated POST, and does not persist or echo keys',async t=>{
  const h=await harness(t);
- for(const sender of [panel,setup,content,{...popup,tab:{id:2}}])assert.equal((await h.message({type:'listWriterModels',settings:{provider:'deepseek',apiKey}},sender)).code,'UNTRUSTED_SENDER');
+ for(const sender of [panel,setup,content,{...popup,tab:{id:2},frameId:1}])assert.equal((await h.message({type:'listWriterModels',settings:{provider:'deepseek',apiKey}},sender)).code,'UNTRUSTED_SENDER');
  assert.equal(h.calls.length,0);
  const result=await h.message({type:'listWriterModels',settings:{provider:'deepseek',apiKey}});
  assert.equal(result.ok,true);assert.deepEqual(result.modelList,{provider:'deepseek',baseUrl:'https://api.deepseek.com',source:'remote',models:[{id:'remote-chat-model'}]});

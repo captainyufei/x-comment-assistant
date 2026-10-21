@@ -1,12 +1,13 @@
 {
   "name": "x-comment-assistant",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node bridge.mjs",
     "test": "node --test *.test.mjs",
-    "check:public": "node scripts/check-public.mjs"
+    "check:public": "node scripts/check-public.mjs",
+    "build:user": "node scripts/build-extension.mjs"
   },
   "engines": {
     "node": ">=20"

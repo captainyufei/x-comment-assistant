@@ -17,10 +17,10 @@
         <p class="eyebrow">当前引擎</p>
         <button id="engine-settings" class="engine-card" type="button" aria-label="设置当前引擎">
           <span id="engine-mark" class="engine-mark" aria-hidden="true">D</span>
-          <span class="engine-copy"><strong id="engine-name">正在读取…</strong><span id="engine-model">检查本机配置</span></span>
+          <span class="engine-copy"><strong id="engine-name">正在读取…</strong><span id="engine-model">读取模型配置</span></span>
           <svg class="icon chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
         </button>
-        <div id="connection" class="connection checking" role="status"><span class="status-dot" aria-hidden="true"></span><span id="connection-text">正在检查连接…</span><button id="refresh-status" class="quiet-button" type="button">重试</button></div>
+        <div id="connection" class="connection checking" role="status"><span class="status-dot" aria-hidden="true"></span><span id="connection-text">正在读取配置…</span><button id="refresh-status" class="quiet-button" type="button">重试</button></div>
       </div>
       <div class="tone-section">
         <div class="tone-row"><label id="tone-label">回复风格</label><button id="tone-toggle" class="tone-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="tone-menu" aria-describedby="tone-note"><span id="tone-value">自动匹配</span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
@@ -46,9 +46,9 @@
         <button id="save-api" class="primary-button" type="submit">保存配置</button>
       </form>
       <form id="agent-settings" role="tabpanel" aria-labelledby="agent-tab" hidden>
-        <label class="field-label" for="agent-provider">已安装的 Agent</label><select id="agent-provider" name="agent"></select>
+        <label class="field-label" for="agent-provider">本地 Agent</label><select id="agent-provider" name="agent"></select>
         <p id="agent-note" class="settings-note">读取本机安装状态…</p>
-        <p class="field-note">复用本机 CLI 登录，无需在插件中再次填写密钥。</p>
+        <p class="field-note">连接可选桥接后，复用本机 CLI 登录，无需另填模型密钥。</p><div id="agent-bridge-actions" class="agent-bridge-actions"><button id="connect-agent" class="secondary-button" type="button">检查本机桥接</button><a href="help.html#local-agent" target="_blank" rel="noopener">查看使用说明 ↗</a></div>
         <button id="save-agent" class="primary-button" type="submit">保存配置</button>
       </form>
       <form id="local-settings" role="tabpanel" aria-labelledby="local-tab" autocomplete="off" hidden>
@@ -60,6 +60,7 @@
         <p id="local-key-note" class="field-note">先在本机启动服务并加载模型，不会自动下载。</p>
         <button id="save-local" class="primary-button" type="submit">保存配置</button>
       </form>
+      <details id="transport-options" class="address-options transport-options"><summary>高级：连接方式</summary><label class="sr-only" for="reply-transport">连接方式</label><select id="reply-transport"><option value="direct">浏览器直连（推荐）</option><option value="bridge">本机桥接（本地 Agent）</option></select><p id="transport-note" class="field-note">浏览器直连 API，无需安装其他软件。</p></details>
     </section>
     <p id="notice" class="notice" role="status" hidden></p>
   </main>

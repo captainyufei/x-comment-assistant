@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "X 评论助手",
   "short_name": "X 评论助手",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "description": "理解原帖语境，从八种回复风格中自动匹配，一次生成四条中文候选；也可手动选风格，由你挑选、编辑并发送。",
   "icons": {
     "16": "icons/icon-16.png",
@@ -17,7 +17,19 @@
     "storage"
   ],
   "host_permissions": [
-    "http://127.0.0.1:8769/*"
+    "https://api.deepseek.com/*",
+    "https://api.openai.com/*",
+    "https://dashscope.aliyuncs.com/*",
+    "https://dashscope-intl.aliyuncs.com/*",
+    "https://*.cn-beijing.maas.aliyuncs.com/*",
+    "https://api.moonshot.cn/*",
+    "https://api.moonshot.ai/*",
+    "https://api.minimax.cn/*",
+    "https://api.minimax.io/*",
+    "https://ark.cn-beijing.volces.com/*",
+    "https://pbs.twimg.com/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -50,6 +62,6 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:8769"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://api.deepseek.com https://api.openai.com https://dashscope.aliyuncs.com https://dashscope-intl.aliyuncs.com https://*.cn-beijing.maas.aliyuncs.com https://api.moonshot.cn https://api.moonshot.ai https://api.minimax.cn https://api.minimax.io https://ark.cn-beijing.volces.com https://pbs.twimg.com http://127.0.0.1:* http://localhost:*"
   }
 }

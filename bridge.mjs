@@ -21,7 +21,7 @@ import {createWriterSettingsController,WriterSettingsError} from './writer-setti
 
 const execFileAsync = promisify(execFile);
 const ROOT = dirname(fileURLToPath(import.meta.url));
-export const VERSION = '0.12.1';
+export const VERSION = '0.13.0';
 export const REPLY_PROTOCOL = '4';
 export const PORT = 8769;
 export const WRITER_MODEL = 'gpt-6.1-sol';

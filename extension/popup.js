@@ -11,7 +11,7 @@ export function mountPopup(sendFn, {preview = false} = {}) {
   if(typeof sendFn!=='function')throw new TypeError('mountPopup 需要消息发送函数');
   const doc=document;
   const $=id=>doc.getElementById(id);
-  let state={enabled:true,tonePreset:'auto',connectionStatus:'checking',health:null,writerSettings:null};
+  let state={enabled:true,tonePreset:'auto',transport:'direct',connectionStatus:'checking',health:null,writerSettings:null};
   let busy=false,destroyed=false,settingsTab='api';
   const modelRequests={api:0,local:0},modelLoading={api:false,local:false},modelCache=new Map();
   const manualModel={api:false,local:false};
@@ -28,7 +28,10 @@ export function mountPopup(sendFn, {preview = false} = {}) {
   function notice(text,{error=false}={}){if(destroyed)return;$('notice').textContent=text;$('notice').className=`notice${error?' error':''}${preview?' preview':''}`;$('notice').hidden=!text;}
   function clearKey(){for(const id of ['api-key','local-api-key']){const node=$(id);if(node)node.value='';}}
   function cancelModelViews(){for(const kind of ['api','local']){modelRequests[kind]++;modelLoading[kind]=false;$(`${kind}-model-refresh`).disabled=busy;}}
+  function transport(){return state.transport==='bridge'?'bridge':'direct';}
+  function writerRequest(message){return request({...message,transport:transport()});}
   function storageNote(saved){
+    if(transport()==='direct')return saved.keyConfigured?'密钥已加密保存在当前浏览器，留空沿用；不通过浏览器同步。':'密钥使用 AES-GCM 加密保存在当前浏览器，不通过浏览器同步。';
     const storage=state.writerSettings?.credentialStorage;
     if(storage?.legacy)return '现有密钥来自旧配置；点击保存后迁移到系统加密存储。';
     if(storage?.backend==='macos-keychain')return saved.keyConfigured?'已保存到 macOS 钥匙串，留空沿用。':'密钥保存到 macOS 钥匙串，各服务商分别保存。';
@@ -64,7 +67,7 @@ export function mountPopup(sendFn, {preview = false} = {}) {
     const requestId=++modelRequests[kind];modelLoading[kind]=true;render();modelNote(kind,'正在从服务读取模型…');
     const settings={provider,baseUrl,...(apiKey?{apiKey}:{})};
     try{
-      const result=await request({type:'listWriterModels',settings});
+      const result=await writerRequest({type:'listWriterModels',settings});
       if(destroyed||requestId!==modelRequests[kind])return;
       const list=result.modelList;
       if(!list||list.provider!==provider||list.baseUrl!==baseUrl||list.source!=='remote'||!Array.isArray(list.models)||list.models.length>2000)throw new Error('invalid list');
@@ -74,7 +77,7 @@ export function mountPopup(sendFn, {preview = false} = {}) {
       displayModels(kind,safeList);
     }catch(error){
       if(destroyed||requestId!==modelRequests[kind])return;
-      const messages={MODEL_DISCOVERY_UNSUPPORTED:'此服务商暂不提供模型列表，请手填模型或接入点 ID。',MODEL_DISCOVERY_AUTH:'密钥验证失败，请检查当前服务商的 API Key。',API_KEY_REQUIRED:'请填写当前服务商的 API Key 后读取。',MODEL_DISCOVERY_TIMEOUT:'读取超时，可刷新列表或手动填写。',BUSY:'正在读取，请稍后刷新列表。',CREDENTIAL_STORE_UNAVAILABLE:'系统密钥存储不可用，请解锁钥匙串或检查 Windows 用户环境。'};
+      const messages={MODEL_DISCOVERY_UNSUPPORTED:'此服务商暂不提供模型列表，请手填模型或接入点 ID。',MODEL_DISCOVERY_AUTH:'密钥验证失败，请检查当前服务商的 API Key。',API_KEY_REQUIRED:'请填写当前服务商的 API Key 后读取。',MODEL_DISCOVERY_TIMEOUT:'读取超时，可刷新列表或手动填写。',BUSY:'正在读取，请稍后刷新列表。',CREDENTIAL_STORE_UNAVAILABLE:transport()==='direct'?'浏览器密钥存储不可用，请重试。':'系统密钥存储不可用，请解锁钥匙串或检查 Windows 用户环境。'};
       modelNote(kind,messages[error?.code]||'暂时无法读取，可刷新列表或手动填写模型。',true);
     }finally{if(settings.apiKey)settings.apiKey='';if(requestId===modelRequests[kind]){modelLoading[kind]=false;render();}}
   }
@@ -92,7 +95,7 @@ export function mountPopup(sendFn, {preview = false} = {}) {
     const descriptor=getProvider(id),reported=state.writerSettings?.agents?.find(item=>item.id===id);
     const supported=descriptor?.supported!==false&&reported?.supported!==false;
     const installed=reported?.installed;
-    return {supported,installed,selectable:supported&&(installed===true||(!reported&&id==='codex'))};
+    return {supported,installed,selectable:transport()==='bridge'&&supported&&(installed===true||(!reported&&id==='codex'))};
   }
   function loadAgents(){
     const current=$('agent-provider').value,active=selectedProvider();
@@ -100,7 +103,7 @@ export function mountPopup(sendFn, {preview = false} = {}) {
     for(const descriptor of AGENT_PROVIDERS){
       const status=agentState(descriptor.id),option=document.createElement('option');
       option.value=descriptor.id;option.disabled=!status.selectable;
-      option.textContent=`${descriptor.label} · ${!status.supported?'暂未适配':status.installed===true?'已安装':status.installed===false?'未安装':'安装状态待检查'}`;
+      option.textContent=`${descriptor.label} · ${transport()==='direct'?'需连接本机桥接':!status.supported?'暂未适配':status.installed===true?'已安装':status.installed===false?'未安装':'安装状态待检查'}`;
       $('agent-provider').append(option);
     }
     const candidates=[active,current,...AGENT_PROVIDERS.map(item=>item.id)];
@@ -110,6 +113,12 @@ export function mountPopup(sendFn, {preview = false} = {}) {
   function renderAgentNote(){
     if(destroyed)return;
     const descriptor=getProvider($('agent-provider').value);
+    $('agent-bridge-actions').hidden=transport()==='bridge'&&state.connectionStatus==='connected';
+    $('connect-agent').disabled=busy;
+    if(transport()==='direct'){
+      $('agent-note').textContent='浏览器不能直接运行本机 Agent。仅此模式需要额外安装可选桥接；模型 API 和本地模型连接无需此桥接。';
+      $('save-agent').disabled=true;return;
+    }
     $('agent-note').textContent=descriptor?(descriptor.id==='codex'?'Codex 复用本机登录，使用插件的低推理写作配置。':`${descriptor.label} 复用本机登录，以 CLI 默认模型生成；生成时确认登录状态。`):'未找到可用的本地 Agent，请先安装并登录 Codex 或 Claude Code。';
     $('save-agent').disabled=busy||!descriptor||!agentState(descriptor.id).selectable;
   }
@@ -138,10 +147,14 @@ export function mountPopup(sendFn, {preview = false} = {}) {
     $('engine-model').textContent=settings.model||state.health?.writerModel||(descriptor?.kind==='agent'?'使用 Agent 自身模型':'打开模型设置');
     $('engine-mark').textContent=descriptor?.kind==='local'?'L':provider==='qwen'?'Q':provider==='kimi'?'K':provider==='minimax'?'M':provider==='doubao'?'豆':provider==='openai'?'O':provider==='claude'?'C':provider==='gemini'?'G':provider==='codex'?'C':'D';
     $('engine-mark').className=`engine-mark${descriptor?.kind==='agent'||descriptor?.kind==='local'?' codex':''}`;
-    const connection=['connected','unavailable','auth-required'].includes(state.connectionStatus)?state.connectionStatus:'checking';
+    const direct=transport()==='direct';
+    const configured=Boolean(descriptor&&settings.model&&(descriptor.kind==='local'||settings.keyConfigured));
+    const connection=direct?(state.connectionStatus==='checking'?'checking':configured?'connected':'auth-required'):['connected','unavailable','auth-required'].includes(state.connectionStatus)?state.connectionStatus:'checking';
     $('connection').className=`connection ${connection}${connection==='connected'&&state.writerSettingsError?' settings-unread':''}`;
-    $('connection-text').textContent=connection==='connected'?'本机服务连接正常':connection==='auth-required'?'本机连接需要恢复':connection==='unavailable'?'本机服务未连接':'正在检查连接…';
-    $('refresh-status').disabled=busy;$('refresh-status').hidden=connection==='connected'&&!state.writerSettingsError;
+    $('connection-text').textContent=direct?(connection==='checking'?'正在读取配置…':configured?'模型已配置，生成时验证':'尚未配置模型'):connection==='connected'?'本机服务连接正常':connection==='auth-required'?'本机连接需要恢复':connection==='unavailable'?'本机服务未连接':'正在检查连接…';
+    $('refresh-status').disabled=busy;$('refresh-status').hidden=direct?!state.writerSettingsError:connection==='connected'&&!state.writerSettingsError;
+    $('reply-transport').value=transport();$('reply-transport').disabled=busy;
+    $('transport-note').textContent=direct?'插件可直连 API 或已运行的本地模型服务。切换方式不会复制密钥。':'使用本机桥接配置。切换为浏览器直连后，需另填一次 API Key。';
     const tone=Object.hasOwn(TONES,state.tonePreset)?state.tonePreset:'auto';$('tone-value').textContent=TONES[tone];
     for(const option of document.querySelectorAll('[data-tone]')){option.setAttribute('aria-selected',String(option.dataset.tone===tone));option.disabled=busy;}
     $('tone-toggle').disabled=busy;
@@ -167,7 +180,7 @@ export function mountPopup(sendFn, {preview = false} = {}) {
   async function refresh(){
     if(busy||destroyed)return;busy=true;render();
     try{const result=await request({type:'popupState'});if(destroyed)return;state={...state,...result,writerSettingsError:result.writerSettingsError??null};loadAgents();render();if(state.connectionStatus==='connected'&&state.writerSettingsError)notice('服务已连接，模型设置暂未读取，点击重试。');else if(!preview)notice('');}
-    catch{state.connectionStatus='unavailable';render();notice('暂时无法读取本机配置，请重试。',{error:true});}
+    catch{state.connectionStatus='unavailable';render();notice(transport()==='direct'?'暂时无法读取浏览器配置，请重试。':'暂时无法读取本机配置，请重试。',{error:true});}
     finally{busy=false;render();}
   }
   async function savePreferences(update){if(busy||destroyed)return;if(preview){render();notice('这是界面预览，设置请在浏览器扩展小窗修改。');return;}busy=true;render();try{const result=await request({type:'savePopupPreferences',...update});state={...state,enabled:result.enabled,tonePreset:result.tonePreset};notice('');}catch{notice('设置未保存，请重试。',{error:true});}finally{busy=false;render();}}
@@ -175,18 +188,33 @@ export function mountPopup(sendFn, {preview = false} = {}) {
     if(busy||destroyed)return;
     if(preview){clearKey();notice('这是界面预览，模型设置请在浏览器扩展小窗保存。');if(settings.apiKey)settings.apiKey='';return;}
     let saved=false;
-    busy=true;render();notice('正在保存本机配置…');
+    busy=true;render();notice(transport()==='direct'?'正在保存浏览器配置…':'正在保存本机配置…');
     try{
-      const result=await request({type:'saveWriterSettings',settings});if(destroyed)return;cancelModelViews();modelCache.clear();clearKey();state.writerSettings=result.writerSettings;
+      const result=await writerRequest({type:'saveWriterSettings',settings});if(destroyed)return;cancelModelViews();modelCache.clear();clearKey();state.writerSettings=result.writerSettings;
       const next=await request({type:'popupState'});if(destroyed)return;state={...state,...next,writerSettingsError:next.writerSettingsError??null};loadAgents();
       if(getProvider(settings.provider)?.kind==='api')$('key-note').textContent=storageNote(profile(settings.provider));
       if(getProvider(settings.provider)?.kind==='local')$('local-key-note').textContent=storageNote(profile(settings.provider));
       saved=true;
-      notice(state.connectionStatus==='connected'&&state.writerSettingsError?'服务已连接，模型设置暂未读取，点击重试。':getProvider(settings.provider)?.kind==='agent'?'已保存本地 Agent 配置，登录和模型状态在生成时确认。':'已保存本机配置，API 连接会在生成时验证。');
+      notice(state.connectionStatus==='connected'&&state.writerSettingsError?'服务已连接，模型设置暂未读取，点击重试。':getProvider(settings.provider)?.kind==='agent'?'已保存本地 Agent 配置，登录和模型状态在生成时确认。':transport()==='direct'?'已保存浏览器配置，生成时验证模型连接。':'已保存本机配置，API 连接会在生成时验证。');
     }catch(error){
       clearKey();const needsKey=['DEEPSEEK_KEY_REQUIRED','API_KEY_REQUIRED','KEY_REQUIRED'].includes(error?.code);
-      notice(needsKey?'请填写当前服务商的 API Key 后再保存。':error?.code==='CREDENTIAL_STORE_UNAVAILABLE'?'系统密钥存储不可用，未保存；请检查钥匙串或 Windows 用户环境。':'模型配置未保存或检查未完成，请确认本机服务后重试。',{error:true});
+      notice(needsKey?'请填写当前服务商的 API Key 后再保存。':error?.code==='CREDENTIAL_STORE_UNAVAILABLE'?(transport()==='direct'?'浏览器密钥存储不可用，未保存；请重试。':'系统密钥存储不可用，未保存；请检查钥匙串或 Windows 用户环境。'):error?.code==='BUSY'?'正在生成，请完成或停止后再修改配置。':transport()==='direct'?'模型配置未保存，请检查配置后重试。':'模型配置未保存或检查未完成，请确认本机服务后重试。',{error:true});
     }finally{if(settings.apiKey)settings.apiKey='';busy=false;render();if(saved&&settingsTab!=='agent')void readModels(settingsTab);}
+  }
+  async function switchTransport(next){
+    if(busy||destroyed)return;
+    if(preview){render();notice('这是界面预览，设置请在浏览器扩展小窗修改。');return;}
+    if(next!=='direct'&&next!=='bridge')return;
+    cancelModelViews();modelCache.clear();clearKey();busy=true;render();notice('正在切换连接方式…');
+    try{
+      await request({type:'setReplyTransport',transport:next});
+      const result=await request({type:'popupState'});if(destroyed)return;
+      state={...state,...result,transport:next,writerSettingsError:result.writerSettingsError??null};
+      loadProvider('api',getProvider(selectedProvider())?.kind==='api'?selectedProvider():API_PROVIDERS[0].id);
+      loadProvider('local',getProvider(selectedProvider())?.kind==='local'?selectedProvider():LOCAL_PROVIDERS[0].id);loadAgents();
+      notice(next==='direct'?'已切换为浏览器直连，请填写自己的 API Key；本机桥接密钥不会复制。':state.connectionStatus==='connected'?'本机桥接已连接，可选择已安装的 Agent。':'尚未连接本机桥接，请先按使用说明安装并启动，然后重试。');
+    }catch(error){notice(error?.code==='BUSY'?'正在生成，请完成或停止后再切换。':'连接方式未切换，请重试。',{error:true});}
+    finally{busy=false;render();if(settingsTab!=='agent')void readModels(settingsTab);}
   }
   function submitModel(kind){
     const local=kind==='local',prefix=local?'local':'api',provider=$(local?'model-provider':'provider').value;
@@ -200,6 +228,8 @@ export function mountPopup(sendFn, {preview = false} = {}) {
   for(const option of document.querySelectorAll('[data-tone]'))listen(option,'click',()=>{closeTone();savePreferences({tonePreset:option.dataset.tone});});
   listen(document,'keydown',event=>{if(event.key==='Escape')closeTone();});
   listen($('refresh-status'),'click',refresh);
+  listen($('reply-transport'),'change',()=>switchTransport($('reply-transport').value));
+  listen($('connect-agent'),'click',()=>transport()==='bridge'?refresh():switchTransport('bridge'));
   listen($('engine-settings'),'click',showSettings);listen($('open-settings'),'click',showSettings);listen($('back-home'),'click',showHome);
   for(const id of ['api','agent','local'])listen($(`${id}-tab`),'click',()=>{notice('');tab(id);if(id!=='agent')void readModels(id);});
   listen($('provider'),'change',()=>{notice('');loadProvider('api',$('provider').value);void readModels('api');});

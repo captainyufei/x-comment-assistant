@@ -24,7 +24,7 @@ async function freePort() {
 
 async function harness(t) {
   const port = await freePort();
-  const session = {}, local = {}, callbacks = {}, calls = [];
+  const session = {}, local = {replyTransport: "bridge"}, callbacks = {}, calls = [];
   let reads = 0, writes = 0, runs = 0, readError = null;
   const releases = [];
   const runner = {

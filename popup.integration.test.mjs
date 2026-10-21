@@ -17,13 +17,14 @@ function harness(t,{initial={},intercept,preview=false}={}){
   const dom=new JSDOM(html,{url:'https://extension-fixture.test/popup.html',runScripts:'outside-only'});
   const w=dom.window;
   const calls=[],modelCalls=[];
-  const state={enabled:true,tonePreset:'auto',connectionStatus:'connected',health:{writerProvider:'deepseek',writerModel:'deepseek-flash'},writerSettings:{provider:'deepseek',model:'deepseek-flash',keyConfigured:true,checkScope:'local'},...structuredClone(initial)};
+  const state={enabled:true,tonePreset:'auto',transport:'bridge',connectionStatus:'connected',health:{writerProvider:'deepseek',writerModel:'deepseek-flash'},writerSettings:{provider:'deepseek',model:'deepseek-flash',keyConfigured:true,checkScope:'local'},...structuredClone(initial)};
   async function send(message){
     (message.type==='listWriterModels'?modelCalls:calls).push(structuredClone(message));
     const custom=await intercept?.(message,state);
     if(custom!==undefined)return custom;
     if(message.type==='listWriterModels')return {ok:true,modelList:{provider:message.settings.provider,baseUrl:message.settings.baseUrl,source:'remote',models:[{id:'fixture-remote-model'}]}};
     if(message.type==='popupState')return {ok:true,...structuredClone(state)};
+    if(message.type==='setReplyTransport'){state.transport=message.transport;state.writerSettings=null;state.health=null;state.connectionStatus=message.transport==='direct'?'auth-required':'unavailable';return {ok:true,transport:state.transport};}
     if(message.type==='savePopupPreferences'){if(Object.hasOwn(message,'enabled'))state.enabled=message.enabled;if(message.tonePreset)state.tonePreset=message.tonePreset;return {ok:true,enabled:state.enabled,tonePreset:state.tonePreset};}
     if(message.type==='saveWriterSettings'){state.writerSettings={provider:message.settings.provider,model:message.settings.model||'gpt-6.1-sol',keyConfigured:message.settings.provider==='deepseek',checkScope:'local'};return {ok:true,writerSettings:structuredClone(state.writerSettings)};}
     throw new Error(`Unexpected message type ${message.type}`);
@@ -143,7 +144,7 @@ test('API settings never prefill a saved key, preserve a blank key and make only
   h.doc.getElementById('api-model').value='deepseek-v4-pro';
   h.doc.getElementById('api-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));
   await until(()=>h.doc.getElementById('notice').textContent.includes('API 连接会在生成时验证'));
-  assert.deepEqual(h.calls[1],{type:'saveWriterSettings',settings:{provider:'deepseek',model:'deepseek-v4-pro',baseUrl:'https://api.deepseek.com'}});
+  assert.deepEqual(h.calls[1],{type:'saveWriterSettings',transport:'bridge',settings:{provider:'deepseek',model:'deepseek-v4-pro',baseUrl:'https://api.deepseek.com'}});
   assert.equal(h.calls[2].type,'popupState');
   assert.equal(h.doc.getElementById('notice').textContent.includes('API 连接成功'),false);
   assert.equal(h.doc.querySelector('#show-key'),null);assert.equal(h.doc.getElementById('api-base-url').value,'https://api.deepseek.com');
@@ -179,7 +180,7 @@ test('local agents use installation detection and keep unsupported integrations 
   assert.equal(options.find(n=>n.value==='claude').disabled,false);assert.equal(options.find(n=>n.value==='gemini').disabled,true);
   h.doc.getElementById('agent-provider').value='claude';h.doc.getElementById('agent-provider').dispatchEvent(new h.w.Event('change'));
   h.doc.getElementById('agent-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));await until(()=>h.doc.getElementById('notice').textContent.includes('已保存本地 Agent'));
-  assert.deepEqual(h.calls[1],{type:'saveWriterSettings',settings:{provider:'claude'}});
+  assert.deepEqual(h.calls[1],{type:'saveWriterSettings',transport:'bridge',settings:{provider:'claude'}});
   h.doc.getElementById('back-home').click();assert.equal(h.doc.getElementById('engine-name').textContent,'Claude Code');
   h.doc.getElementById('open-settings').click();assert.equal(h.doc.getElementById('agent-settings').hidden,false);
 });
@@ -219,7 +220,7 @@ test('local models accept a real local model name and loopback endpoint without 
  const h=harness(t);await h.popup.ready;h.doc.getElementById('open-settings').click();h.doc.getElementById('local-tab').click();
  h.doc.getElementById('local-model').value='qwen3:8b';h.doc.getElementById('local-base-url').value='http://localhost:11434/v1/';
  h.doc.getElementById('local-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));await until(()=>h.calls.length>=3&&!h.doc.getElementById('save-api').disabled&&!h.doc.getElementById('save-local').disabled);
- assert.deepEqual(h.calls[1],{type:'saveWriterSettings',settings:{provider:'ollama',model:'qwen3:8b',baseUrl:'http://127.0.0.1:11434/v1'}});assert.equal(h.calls.some(m=>m.type==='inlineGenerate'),false);
+ assert.deepEqual(h.calls[1],{type:'saveWriterSettings',transport:'bridge',settings:{provider:'ollama',model:'qwen3:8b',baseUrl:'http://127.0.0.1:11434/v1'}});assert.equal(h.calls.some(m=>m.type==='inlineGenerate'),false);
 });
 
 test('local provider switches clear optional keys and restore the chosen service defaults',async t=>{
@@ -236,7 +237,7 @@ test('invalid cloud endpoints and non-local local-model endpoints are rejected b
 
 test('unknown model ids remain editable and are submitted without a static model allowlist',async t=>{
  const h=harness(t);await h.popup.ready;h.doc.getElementById('open-settings').click();h.doc.getElementById('provider').value='doubao';h.doc.getElementById('provider').dispatchEvent(new h.w.Event('change'));h.doc.getElementById('api-model').value='ep-user-model-20261020';h.doc.getElementById('api-key').value='private-doubao-key';
- h.doc.getElementById('api-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));await until(()=>h.calls.length>=3&&!h.doc.getElementById('save-api').disabled&&!h.doc.getElementById('save-local').disabled);assert.deepEqual(h.calls[1],{type:'saveWriterSettings',settings:{provider:'doubao',model:'ep-user-model-20261020',baseUrl:'https://ark.cn-beijing.volces.com/api/v3',apiKey:'private-doubao-key'}});
+ h.doc.getElementById('api-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));await until(()=>h.calls.length>=3&&!h.doc.getElementById('save-api').disabled&&!h.doc.getElementById('save-local').disabled);assert.deepEqual(h.calls[1],{type:'saveWriterSettings',transport:'bridge',settings:{provider:'doubao',model:'ep-user-model-20261020',baseUrl:'https://ark.cn-beijing.volces.com/api/v3',apiKey:'private-doubao-key'}});
 });
 
 test('preview also blocks local model and local agent saves',async t=>{
@@ -246,7 +247,7 @@ test('preview also blocks local model and local agent saves',async t=>{
 test('settings automatically fetch real models using a saved key, with no key echo or model overwrite',async t=>{
  const h=harness(t);await h.popup.ready;h.doc.getElementById('open-settings').click();
  await until(()=>h.doc.getElementById('api-model-note').textContent.includes('1 个模型'));
- assert.deepEqual(h.modelCalls,[{type:'listWriterModels',settings:{provider:'deepseek',baseUrl:'https://api.deepseek.com'}}]);
+ assert.deepEqual(h.modelCalls,[{type:'listWriterModels',transport:'bridge',settings:{provider:'deepseek',baseUrl:'https://api.deepseek.com'}}]);
  assert.deepEqual([...h.doc.querySelectorAll('#api-models option[data-remote-model]')].map(n=>n.value),['fixture-remote-model']);
  assert.equal(h.doc.getElementById('api-model').value,'deepseek-flash');
  assert.equal(h.calls.some(m=>['saveWriterSettings','inlineGenerate'].includes(m.type)),false);
@@ -286,7 +287,7 @@ test('unsupported discovery remains editable, errors are fixed text, and preview
 test('local model discovery uses its own endpoint and does not download or save a model',async t=>{
  const h=harness(t);await h.popup.ready;h.doc.getElementById('open-settings').click();h.doc.getElementById('local-tab').click();
  await until(()=>h.doc.getElementById('local-model-note').textContent.includes('1 个模型'));
- assert.deepEqual(h.modelCalls.at(-1),{type:'listWriterModels',settings:{provider:'ollama',baseUrl:'http://127.0.0.1:11434/v1'}});
+ assert.deepEqual(h.modelCalls.at(-1),{type:'listWriterModels',transport:'bridge',settings:{provider:'ollama',baseUrl:'http://127.0.0.1:11434/v1'}});
  assert.equal(h.doc.getElementById('local-model').value,'');assert.equal(h.calls.some(m=>m.type==='saveWriterSettings'),false);
 });
 
@@ -325,4 +326,103 @@ test('manual model entry remains available and a fresh fetched list still waits 
  assert.equal(h.doc.getElementById('api-model').hidden,false);h.doc.getElementById('api-model').value='my-custom-model';
  h.doc.getElementById('api-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));await until(()=>h.calls.some(m=>m.type==='saveWriterSettings'));
  assert.equal(h.calls.find(m=>m.type==='saveWriterSettings').settings.model,'my-custom-model');
+});
+
+
+test('fresh direct install configures API entirely in the popup without local service or automatic generation',async t=>{
+ const h=harness(t,{initial:{transport:'direct',connectionStatus:'auth-required',writerSettings:null,health:null},intercept(message,state){
+  if(message.type==='saveWriterSettings'){
+   assert.equal(message.transport,'direct');
+   const {provider,model,baseUrl}=message.settings;
+   state.writerSettings={provider,model,baseUrl,keyConfigured:true,profiles:{[provider]:{model,baseUrl,keyConfigured:true}},credentialStorage:{backend:'browser-aes-gcm'},checkScope:'browser'};
+   state.connectionStatus='configured';return {ok:true,writerSettings:state.writerSettings};
+  }
+ }});await h.popup.ready;
+ assert.equal(h.doc.getElementById('connection-text').textContent,'尚未配置模型');
+ assert.equal(h.doc.getElementById('refresh-status').hidden,true);
+ assert.equal(h.doc.getElementById('engine-name').textContent,'尚未配置');
+ h.doc.getElementById('open-settings').click();
+ assert.equal(h.doc.getElementById('api-models').value,'');assert.equal(h.modelCalls.length,0);
+ assert.match(h.doc.getElementById('key-note').textContent,/AES-GCM/);assert.match(h.doc.getElementById('key-note').textContent,/不通过浏览器同步/);
+ const key=h.doc.getElementById('api-key');key.value='fixture-direct-own-key';key.dispatchEvent(new h.w.Event('input'));key.dispatchEvent(new h.w.Event('blur'));
+ await until(()=>h.doc.querySelectorAll('#api-models option[data-remote-model]').length===1);
+ assert.equal(h.modelCalls[0].transport,'direct');assert.equal(h.modelCalls[0].settings.apiKey,'fixture-direct-own-key');
+ const select=h.doc.getElementById('api-models');select.value='fixture-remote-model';select.dispatchEvent(new h.w.Event('change'));
+ h.doc.getElementById('api-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));
+ await until(()=>h.doc.getElementById('notice').textContent.includes('已保存浏览器配置'));
+ assert.equal(key.value,'');assert.equal(h.doc.documentElement.outerHTML.includes('fixture-direct-own-key'),false);
+ h.doc.getElementById('back-home').click();
+ assert.equal(h.doc.getElementById('connection-text').textContent,'模型已配置，生成时验证');
+ assert.equal(h.doc.body.textContent.includes('本机服务未连接'),false);
+ h.doc.getElementById('open-settings').click();assert.match(key.placeholder,/留空沿用/);
+ h.doc.getElementById('api-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));
+ await until(()=>h.calls.filter(m=>m.type==='saveWriterSettings').length===2&&!h.doc.getElementById('save-api').disabled);
+ const saves=h.calls.filter(m=>m.type==='saveWriterSettings');assert.equal('apiKey' in saves[1].settings,false);
+ assert.equal(h.calls.some(m=>['inlineGenerate','setReplyTransport','captureTimeline'].includes(m.type)),false);
+ assert.ok(h.calls.every(m=>['popupState','saveWriterSettings'].includes(m.type)));
+});
+
+test('direct local model config uses browser transport and needs no bridge or API key',async t=>{
+ const h=harness(t,{initial:{transport:'direct',connectionStatus:'auth-required',writerSettings:null,health:null}});await h.popup.ready;
+ h.doc.getElementById('open-settings').click();h.doc.getElementById('local-tab').click();
+ await until(()=>h.doc.querySelectorAll('#local-models option[data-remote-model]').length===1);assert.equal(h.modelCalls[0].transport,'direct');
+ h.doc.getElementById('local-models').value='fixture-remote-model';h.doc.getElementById('local-models').dispatchEvent(new h.w.Event('change'));
+ h.doc.getElementById('local-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));
+ await until(()=>h.calls.some(m=>m.type==='saveWriterSettings'));
+ const save=h.calls.find(m=>m.type==='saveWriterSettings');assert.equal(save.transport,'direct');assert.equal(save.settings.provider,'ollama');assert.equal('apiKey' in save.settings,false);
+ assert.equal(h.calls.some(m=>m.type==='setReplyTransport'),false);
+});
+
+test('direct Agent tab honestly requires optional bridge and a deliberate switch',async t=>{
+ const h=harness(t,{initial:{transport:'direct',connectionStatus:'auth-required',writerSettings:null,health:null}});await h.popup.ready;
+ h.doc.getElementById('open-settings').click();h.doc.getElementById('agent-tab').click();
+ assert.equal(h.doc.getElementById('save-agent').disabled,true);assert.match(h.doc.getElementById('agent-note').textContent,/浏览器不能直接运行/);
+ assert.ok([...h.doc.getElementById('agent-provider').options].every(option=>option.disabled));
+ assert.equal(h.doc.querySelector('#agent-bridge-actions a').getAttribute('href'),'help.html#local-agent');
+ h.doc.getElementById('connect-agent').click();
+ await until(()=>h.calls.some(m=>m.type==='setReplyTransport')&&!h.doc.getElementById('connect-agent').disabled);
+ assert.deepEqual(h.calls.find(m=>m.type==='setReplyTransport'),{type:'setReplyTransport',transport:'bridge'});
+ assert.match(h.doc.getElementById('notice').textContent,/尚未连接本机桥接/);
+ assert.equal(h.calls.some(m=>m.type==='saveWriterSettings'),false);
+});
+
+test('bridge user can choose browser transport without copying a key or stale saved model',async t=>{
+ const h=harness(t);await h.popup.ready;h.doc.getElementById('open-settings').click();
+ const key=h.doc.getElementById('api-key');key.value='fixture-unsaved-bridge-key';
+ const transport=h.doc.getElementById('reply-transport');transport.value='direct';transport.dispatchEvent(new h.w.Event('change'));
+ await until(()=>h.state.transport==='direct'&&!transport.disabled);
+ assert.equal(key.value,'');assert.equal(h.doc.getElementById('api-model').value,'');assert.equal(h.doc.getElementById('api-models').value,'');
+ assert.equal(h.doc.getElementById('connection-text').textContent,'尚未配置模型');assert.equal(h.doc.getElementById('transport-options').open,false);
+ assert.match(h.doc.getElementById('notice').textContent,/密钥不会复制/);
+ assert.equal(h.calls.some(m=>m.type==='saveWriterSettings'),false);
+ assert.equal(h.calls.some(m=>JSON.stringify(m).includes('fixture-unsaved-bridge-key')),false);
+});
+
+test('active generation rejects transport switch and preserves old connection mode',async t=>{
+ const h=harness(t,{intercept:m=>m.type==='setReplyTransport'?{ok:false,code:'BUSY'}:undefined});await h.popup.ready;h.doc.getElementById('open-settings').click();
+ const transport=h.doc.getElementById('reply-transport');transport.value='direct';transport.dispatchEvent(new h.w.Event('change'));
+ await until(()=>h.doc.getElementById('notice').classList.contains('error'));
+ assert.equal(transport.value,'bridge');assert.match(h.doc.getElementById('notice').textContent,/正在生成/);assert.equal(h.state.transport,'bridge');
+ assert.equal(h.calls.some(m=>m.type==='saveWriterSettings'),false);
+});
+
+test('preview prevents transport changes and bridge probing',async t=>{
+ const h=harness(t,{preview:true,initial:{transport:'direct',connectionStatus:'auth-required',writerSettings:null,health:null}});await h.popup.ready;
+ h.doc.getElementById('open-settings').click();h.doc.getElementById('agent-tab').click();h.doc.getElementById('connect-agent').click();
+ assert.deepEqual(h.calls.map(m=>m.type),['popupState']);assert.match(h.doc.getElementById('notice').textContent,/预览/);
+});
+
+
+test('fresh direct state with an empty provider profile does not claim a configured model',async t=>{
+ const h=harness(t,{initial:{transport:'direct',connectionStatus:'auth-required',writerSettings:{provider:'deepseek',model:'',keyConfigured:false,profiles:{},credentialStorage:{backend:'browser-aes-gcm'}},health:{writerProvider:'deepseek',writerModel:'',authenticated:false}}});await h.popup.ready;
+ assert.equal(h.doc.getElementById('connection-text').textContent,'尚未配置模型');
+ assert.equal(h.doc.getElementById('engine-model').textContent,'打开模型设置');
+ h.doc.getElementById('open-settings').click();assert.equal(h.modelCalls.length,0);assert.equal(h.doc.getElementById('api-model').value,'');
+});
+
+test('browser credential storage failure never tells direct users to install a local service or unlock Keychain',async t=>{
+ const h=harness(t,{initial:{transport:'direct',connectionStatus:'configured'},intercept:m=>m.type==='saveWriterSettings'?{ok:false,code:'CREDENTIAL_STORE_UNAVAILABLE'}:undefined});await h.popup.ready;
+ h.doc.getElementById('open-settings').click();h.doc.getElementById('api-key').value='fixture-failing-browser-save';h.doc.getElementById('api-settings').dispatchEvent(new h.w.Event('submit',{cancelable:true}));
+ await until(()=>h.doc.getElementById('notice').classList.contains('error'));
+ assert.match(h.doc.getElementById('notice').textContent,/浏览器密钥存储不可用/);assert.equal(h.doc.getElementById('notice').textContent.includes('钥匙串'),false);assert.equal(h.doc.getElementById('api-key').value,'');
 });

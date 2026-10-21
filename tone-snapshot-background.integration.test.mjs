@@ -8,7 +8,7 @@ const context = {id: '1234567890123456789', url: 'https://x.com/demo_user/status
 const candidates = ['witty', 'humor', 'insight', 'story'].map((style, i) => ({style, replyStyle: 'professional', label: '上游不可信标签', text: `中文候选 ${i}`}));
 
 async function harness(t, {beforeJobResponse} = {}) {
-  const session = {}, local = {replyPreferences: {style: 'all', tone: '私人口吻不得投影到页面', personalExperience: '私密经历不得投影到页面'}};
+  const session = {}, local = {replyTransport: 'bridge', replyPreferences: {style: 'all', tone: '私人口吻不得投影到页面', personalExperience: '私密经历不得投影到页面'}};
   const callbacks = {}, requests = [], jobs = new Map(); let nextJob = 0;
   const oldChrome = globalThis.chrome, oldFetch = globalThis.fetch;
   const area = data => ({async get(key) {return structuredClone({[key]: data[key]});}, async set(values) {Object.assign(data, structuredClone(values));}, async setAccessLevel() {}});

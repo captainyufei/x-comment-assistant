@@ -7,17 +7,24 @@ import {
 } from "./background-core.js";
 import {captureVisibleTweets} from "./capture.js";
 import {publicMediaEvidence} from "./media-core.js";
+import {createDirectWriter} from "./direct-api.js";
+import {isAgentProvider} from "./provider-catalog.js";
 
 const STATE_KEY = "replySessionState";
 const PREFERENCES_KEY = "replyPreferences";
 const FEEDBACK_KEY = "replyInlineFeedback";
 const POPUP_PREFERENCES_KEY = "replyPopupPreferences";
+const TRANSPORT_KEY = "replyTransport";
+const directTasks = new Map();
+let replyTransport = "direct";
+let directWriter;
+const getDirectWriter = () => directWriter ??= createDirectWriter();
 const MAX_FEEDBACK = 300;
 const MENU_ID = "reply-selected-tweet";
 const JOB_STATUSES = new Set(["running", "completed", "failed", "cancelled"]);
 const INLINE_MESSAGES = new Set(["inlineInit", "inlineGenerate", "inlinePoll", "inlineCancel", "inlineClose", "inlineHealth", "inlineOpenSetup", "inlineFeedback"]);
 const SETUP_MESSAGES = new Set(["getState", "checkBridge", "saveSettings"]);
-const POPUP_MESSAGES = new Set(["popupState", "savePopupPreferences", "getWriterSettings", "saveWriterSettings", "listWriterModels"]);
+const POPUP_MESSAGES = new Set(["popupState", "savePopupPreferences", "getWriterSettings", "saveWriterSettings", "listWriterModels", "setReplyTransport"]);
 const MAX_INLINE_SESSIONS = 32;
 let state;
 let popupPreferences = {...DEFAULT_POPUP_PREFERENCES};
@@ -26,12 +33,13 @@ let queue = Promise.resolve();
 const ready = (async () => {
   await chrome.storage.session.setAccessLevel({accessLevel: "TRUSTED_CONTEXTS"});
   await chrome.storage.local.setAccessLevel({accessLevel: "TRUSTED_CONTEXTS"});
-  const [session, local, popupLocal] = await Promise.all([
-    chrome.storage.session.get(STATE_KEY), chrome.storage.local.get(PREFERENCES_KEY), chrome.storage.local.get(POPUP_PREFERENCES_KEY)
+  const [session, local, popupLocal, transportLocal] = await Promise.all([
+    chrome.storage.session.get(STATE_KEY), chrome.storage.local.get(PREFERENCES_KEY), chrome.storage.local.get(POPUP_PREFERENCES_KEY), chrome.storage.local.get(TRANSPORT_KEY)
   ]);
   try { popupPreferences = validatePopupPreferences(popupLocal[POPUP_PREFERENCES_KEY]); }
   catch { popupPreferences = {...DEFAULT_POPUP_PREFERENCES}; }
   const saved = session[STATE_KEY] ?? {};
+  replyTransport = ["direct", "bridge"].includes(transportLocal[TRANSPORT_KEY]) ? transportLocal[TRANSPORT_KEY] : saved.pairingToken ? "bridge" : "direct";
   let preferences;
   try { const {contextNote, ...savedPreferences} = validatePreferences(local[PREFERENCES_KEY] ?? DEFAULT_PREFERENCES); preferences = {...savedPreferences, style: 'all'}; }
   catch { preferences = {...DEFAULT_PREFERENCES}; }
@@ -40,6 +48,15 @@ const ready = (async () => {
     pairingToken: "", job: null, captureError: "", ...saved, preferences, pairingVerified: false
   };
   state.inlineSessions = restoreInlineSessions(saved.inlineSessions);
+  state.transport = replyTransport;
+  let recovered = false;
+  for (const holder of [state, ...Object.values(state.inlineSessions)]) {
+    if (holder.job?.transport === "direct" && holder.job.status === "running") {
+      holder.job = {...holder.job, status: "failed", error: "浏览器后台已重启，请点击重新生成。", code: "DIRECT_WORKER_RESTARTED"};
+      recovered = true;
+    }
+  }
+  if (recovered) await persist();
 })();
 
 function restoreInlineSessions(saved) {
@@ -106,6 +123,7 @@ async function assertIdle() {
   }
   for (const entry of running) {
     const previous = entry.get();
+    if (previous.transport === "direct") continue;
     try {
       const payload = await requestBridge(`/jobs/${encodeURIComponent(previous.id)}`);
       entry.set(normalizeJob(payload, previous, {inline: entry.inline === true}));
@@ -172,6 +190,7 @@ function normalizeJob(payload, previous, {inline = false} = {}) {
   if (previous?.id && job.id !== previous.id) throw bridgeError("任务编号不一致，请重新生成。", "INVALID_RESPONSE");
   const result = {
     id: job.id, status: job.status, context: previous.context,
+    ...((job.transport ?? previous.transport) === "direct" ? {transport: "direct"} : {}),
     preferences: previous.preferences,
     ...publicToneSnapshot(previous.tonePreset, previous.hasCustomTone),
     error: typeof job.error === "string" ? safeBridgeMessage(job.error) : "",
@@ -280,6 +299,7 @@ function restoreFeedback(records) {
 function publicInlineJob(job) {
   return {
     id: job.id, status: job.status, context: {...job.context}, error: job.error ?? "",
+    ...(job.transport === "direct" ? {transport: "direct"} : {}),
     ...publicToneSnapshot(job.tonePreset, job.hasCustomTone),
     ...(job.code ? {code: job.code} : {}),
     ...(job.candidates ? {candidates: job.candidates} : {}),
@@ -290,11 +310,92 @@ function publicInlineJob(job) {
   };
 }
 
+function selectedTransport(message, settings) {
+  if (message.transport !== undefined && !["direct", "bridge"].includes(message.transport)) throw bridgeError("模型运行方式无效。", "INVALID_INPUT");
+  return settings && isAgentProvider(settings.provider) ? "bridge" : message.transport ?? replyTransport;
+}
+
+async function setTransport(transport) {
+  if (!["direct", "bridge"].includes(transport)) throw bridgeError("模型运行方式无效。", "INVALID_INPUT");
+  await assertIdle();
+  replyTransport = transport;
+  state.transport = transport;
+  await chrome.storage.local.set({[TRANSPORT_KEY]: transport});
+  await persist();
+}
+
+async function directConnection() {
+  const writer = getDirectWriter();
+  const health = publicHealth(await writer.health());
+  return {paired: true, configured: health.authenticated, transport: "direct", health};
+}
+
+function directError(error) {
+  const code = typeof error?.code === "string" && /^[A-Z][A-Z0-9_]{0,99}$/.test(error.code) ? error.code : "DIRECT_REQUEST_FAILED";
+  // Only the engine's fixed public messages are safe. Network/provider errors can contain credentials.
+  const messages = {
+    DIRECT_CONFIG_REQUIRED: "请先点击工具栏图标，配置模型 API。",
+    DIRECT_NOT_CONFIGURED: "请先选择模型并保存该服务商的 API Key。",
+    DIRECT_WORKER_RESTARTED: "浏览器后台已重启，请重新生成。",
+    DIRECT_AUTH_REQUIRED: "API Key 无效或没有该模型的访问权限。",
+    DIRECT_QUOTA: "模型服务余额不足，请检查账户余额。",
+    DIRECT_RATE_LIMIT: "模型服务请求频率或并发受限，请稍后再试。",
+    DIRECT_CONFIG: "请检查模型名称、API 地址和服务商配置。",
+    DIRECT_TIMEOUT: "生成超过一分钟，已停止，请稍后重试。",
+    DIRECT_HEADERS_TIMEOUT: "模型服务等待响应超时，已停止，请稍后重试。",
+    BROWSER_VAULT_UNAVAILABLE: "浏览器本机密钥存储不可用，请检查浏览器配置后重新保存。",
+    INVALID_CANDIDATES: "模型返回的回复格式或内容未通过检查，请重试。"
+  };
+  return {code, message: messages[code] ?? "模型请求未完成，请检查 API 配置或网络后重试。"};
+}
+
+async function startDirectJob(holder, context, preferences, toneSnapshot, {inline = false} = {}) {
+  if (!await getDirectWriter().hasConfiguration()) throw bridgeError("请先点击工具栏图标，配置模型 API。", "DIRECT_CONFIG_REQUIRED");
+  const id = crypto.randomUUID();
+  const controller = new AbortController();
+  const initial = {id, status: "running", transport: "direct", context, preferences, ...toneSnapshot, error: ""};
+  holder.job = initial;
+  directTasks.set(id, controller);
+  // Start outside the message queue: polling and cancellation must not wait for model completion.
+  Promise.resolve().then(() => getDirectWriter().run(context, preferences, controller.signal)).then(
+    result => serialize(async () => {
+      if (holder.job?.id !== id || holder.job.status !== "running" || directTasks.get(id) !== controller) return;
+      try {
+        holder.job = normalizeJob({...result, id, status: "completed", transport: "direct"}, initial, {inline});
+        if (holder === state) { state.results = holder.job.candidates; state.resultsContext = context; }
+      } catch (error) {
+        holder.job = {...initial, status: "failed", error: directError(error).message, code: directError(error).code};
+      }
+      directTasks.delete(id);
+      await persist();
+    }),
+    error => serialize(async () => {
+      if (holder.job?.id !== id || holder.job.status !== "running" || directTasks.get(id) !== controller) return;
+      const failure = directError(error);
+      holder.job = {...initial, status: "failed", error: failure.message, code: failure.code};
+      directTasks.delete(id);
+      await persist();
+    })
+  ).catch(() => {});
+  return initial;
+}
+
+async function updateDirectJob(holder, {cancel = false} = {}) {
+  if (cancel && holder.job.status === "running") {
+    directTasks.get(holder.job.id)?.abort();
+    directTasks.delete(holder.job.id);
+    holder.job = {...holder.job, status: "cancelled", error: ""};
+    await persist();
+  }
+  return holder.job;
+}
+
 async function updateInlineJob(session, id, {cancel = false} = {}) {
   if (!session.job || typeof id !== "string" || id !== session.job.id || !/^[A-Za-z0-9_-]{1,100}$/.test(id)) {
     throw bridgeError("没有找到这条生成任务，请重新生成。", "JOB_NOT_FOUND");
   }
   if (session.job.status !== "running") return session.job;
+  if (session.job.transport === "direct") return updateDirectJob(session, {cancel});
   try {
     const payload = await requestBridge(`/jobs/${encodeURIComponent(id)}`, {method: cancel ? "DELETE" : "GET"});
     session.job = normalizeJob(payload, session.job, {inline: true});
@@ -328,7 +429,19 @@ function assertEnabled() {
 async function dispatchPopup(message) {
   switch (message.type) {
     case "popupState": {
-      const result = {...popupPreferences, health: null, connectionStatus: "unavailable", writerSettings: null, writerSettingsError: null};
+      const result = {...popupPreferences, transport: replyTransport, health: null, connectionStatus: "unavailable", writerSettings: null, writerSettingsError: null};
+      if (replyTransport === "direct") {
+        try {
+          const checked = await directConnection();
+          result.health = checked.health;
+          result.connectionStatus = checked.configured ? "configured" : "auth-required";
+          result.writerSettings = publicWriterSettings(await getDirectWriter().readSettings());
+        } catch (error) {
+          const failure = directError(error);
+          result.error = failure.message; result.code = failure.code;
+        }
+        return result;
+      }
       try {
         const checked = await checkConnection({allowUnauthenticated: true});
         result.health = checked.health;
@@ -349,6 +462,11 @@ async function dispatchPopup(message) {
       }
       return result;
     }
+    case "setReplyTransport": {
+      if (Object.keys(message).some(key => !["type", "transport"].includes(key))) throw bridgeError("模型运行方式无效。", "INVALID_INPUT");
+      await setTransport(message.transport);
+      return {transport: replyTransport};
+    }
     case "savePopupPreferences": {
       if (Object.keys(message).some(key => !["type", "enabled", "tonePreset"].includes(key))) throw bridgeError("插件偏好无效。", "INVALID_INPUT");
       const {type, ...changes} = message;
@@ -357,27 +475,42 @@ async function dispatchPopup(message) {
       return {...popupPreferences};
     }
     case "getWriterSettings": {
+      if (Object.keys(message).some(key => !["type", "transport"].includes(key))) throw bridgeError("模型配置请求无效。", "INVALID_INPUT");
+      if (selectedTransport(message) === "direct") return {transport: "direct", writerSettings: publicWriterSettings(await getDirectWriter().readSettings())};
       await checkConnection({allowUnauthenticated: true});
       return {writerSettings: publicWriterSettings(await requestBridge("/writer-settings/read", {method: "POST", body: {}}))};
     }
     case "saveWriterSettings": {
-      if (Object.keys(message).some(key => !["type", "settings"].includes(key))) throw bridgeError("模型配置无效。", "INVALID_INPUT");
+      if (Object.keys(message).some(key => !["type", "settings", "transport"].includes(key))) throw bridgeError("模型配置无效。", "INVALID_INPUT");
       const settings = validateWriterSettings(message.settings);
+      const transport = selectedTransport(message, settings);
+      await assertIdle();
+      if (transport === "direct") {
+        try {
+          const writerSettings = publicWriterSettings(await getDirectWriter().saveSettings(settings));
+          await setTransport("direct");
+          return {transport: "direct", writerSettings};
+        } catch (error) { const failure = directError(error); throw bridgeError(failure.message, failure.code); }
+        finally { if (settings.apiKey) settings.apiKey = ""; }
+      }
       try {
         await checkConnection({allowUnauthenticated: true});
-        return {writerSettings: publicWriterSettings(await requestBridge("/writer-settings", {method: "POST", body: settings}))};
+        const writerSettings = publicWriterSettings(await requestBridge("/writer-settings", {method: "POST", body: settings}));
+        if (message.transport !== undefined || isAgentProvider(settings.provider)) await setTransport("bridge");
+        return {transport: "bridge", writerSettings};
       } catch (error) {
         // A misbehaving local service must not echo a newly supplied key into popup errors.
         throw bridgeError(safeBridgeMessage(error.message, settings.apiKey), error.code ?? "INVALID_SETTINGS");
       }
     }
     case "listWriterModels": {
-      if(Object.keys(message).some(key=>!['type','settings'].includes(key)))throw bridgeError('模型列表请求无效。','INVALID_INPUT');
+      if(Object.keys(message).some(key=>!['type','settings','transport'].includes(key)))throw bridgeError('模型列表请求无效。','INVALID_INPUT');
       const selection=validateModelDiscovery(message.settings);
       try{
+        if(selectedTransport(message)==='direct')return {transport:'direct',modelList:publicModelDiscovery(await getDirectWriter().listModels(selection),selection)};
         await checkConnection({allowUnauthenticated:true});
         return {modelList:publicModelDiscovery(await requestBridge('/writer-settings/models',{method:'POST',body:selection,timeoutMs:18000}),selection)};
-      }catch(error){throw bridgeError(safeBridgeMessage(error.message,selection.apiKey),error.code??'MODELS_UNAVAILABLE');}
+      }catch(error){if(selectedTransport(message)==='direct'){const failure=directError(error);throw bridgeError(failure.message,failure.code);}throw bridgeError(safeBridgeMessage(error.message,selection.apiKey),error.code??'MODELS_UNAVAILABLE');}
       finally{if(selection.apiKey)selection.apiKey='';}
     }
     default: throw bridgeError("无法识别的插件请求。", "UNKNOWN_MESSAGE");
@@ -388,7 +521,7 @@ async function dispatchInline(message, sender) {
   switch (message.type) {
     case "inlineInit": {
       const context = validateInlineContext(message.context);
-      if (popupPreferences.enabled) await checkConnection();
+      if (popupPreferences.enabled && replyTransport === "bridge") await checkConnection();
       // Reloading X creates a new document. Cancel only this tab's obsolete inline work before accepting its new source.
       for (const [id, session] of Object.entries(state.inlineSessions)) {
         if (session.owner.tabId === sender.tab.id && session.owner.frameId === sender.frameId && session.owner.documentId !== sender.documentId) {
@@ -404,14 +537,14 @@ async function dispatchInline(message, sender) {
         context, job: null
       };
       await persist();
-      return {sessionId, paired: state.pairingVerified === true, ...(!popupPreferences.enabled ? {enabled: false} : {})};
+      return {sessionId, paired: replyTransport === "direct" || state.pairingVerified === true, transport: replyTransport, ...(!popupPreferences.enabled ? {enabled: false} : {})};
     }
     case "inlineHealth": {
       if (!popupPreferences.enabled) return {enabled: false, paired: state.pairingVerified === true};
-      return checkConnection();
+      return replyTransport === "direct" ? directConnection() : checkConnection();
     }
     case "inlineOpenSetup": {
-      await chrome.tabs.create({url: chrome.runtime.getURL("setup.html")});
+      await chrome.tabs.create({url: chrome.runtime.getURL(replyTransport === "direct" ? "popup.html" : "setup.html")});
       return {opened: true};
     }
     case "inlineGenerate": {
@@ -427,8 +560,11 @@ async function dispatchInline(message, sender) {
       const generationPopupPreferences = validatePopupPreferences(popupPreferences);
       const toneSnapshot = publicToneSnapshot(generationPopupPreferences.tonePreset, Boolean(existingPreferences.tone?.trim()));
       const preferences = generationPreferences({...existingPreferences, style: 'all'}, generationPopupPreferences);
-      const payload = await requestBridge("/jobs", {method: "POST", body: {context, preferences}});
-      session.job = normalizeJob(payload, {context, preferences, ...toneSnapshot}, {inline: true});
+      if (replyTransport === "direct") await startDirectJob(session, context, preferences, toneSnapshot, {inline: true});
+      else {
+        const payload = await requestBridge("/jobs", {method: "POST", body: {context, preferences}});
+        session.job = normalizeJob(payload, {context, preferences, ...toneSnapshot}, {inline: true});
+      }
       await persist();
       return {job: publicInlineJob(session.job)};
     }
@@ -524,7 +660,7 @@ async function dispatch(message) {
       return {state: publicState(state)};
     }
     case "checkBridge": {
-      return checkConnection();
+      return replyTransport === "direct" ? directConnection() : checkConnection();
     }
     case "generate": {
       assertEnabled();
@@ -540,8 +676,11 @@ async function dispatch(message) {
       const generationPopupPreferences = validatePopupPreferences(popupPreferences);
       const toneSnapshot = publicToneSnapshot(generationPopupPreferences.tonePreset, Boolean(savedPreferences.tone?.trim()));
       const preferences = generationPreferences(savedPreferences, generationPopupPreferences);
-      const payload = await requestBridge("/jobs", {method: "POST", body: {context, preferences}});
-      state.job = normalizeJob(payload, {context, preferences, ...toneSnapshot});
+      if (replyTransport === "direct") await startDirectJob(state, context, preferences, toneSnapshot);
+      else {
+        const payload = await requestBridge("/jobs", {method: "POST", body: {context, preferences}});
+        state.job = normalizeJob(payload, {context, preferences, ...toneSnapshot});
+      }
       // Preset instructions apply to this request only; preserve the stored custom tone.
       state.preferences = savedPreferences;
       if (state.job.status === "completed") {
@@ -557,6 +696,7 @@ async function dispatch(message) {
         throw bridgeError("没有找到这条生成任务，请重新生成。", "JOB_NOT_FOUND");
       }
       if (state.job.status !== "running") return {job: state.job, state: publicState(state)};
+      if (state.job.transport === "direct") { await updateDirectJob(state, {cancel: message.type === "cancelJob"}); return {job: state.job, state: publicState(state)}; }
       let payload;
       try {
         payload = await requestBridge(`/jobs/${encodeURIComponent(message.id)}`, {method: message.type === "cancelJob" ? "DELETE" : "GET"});

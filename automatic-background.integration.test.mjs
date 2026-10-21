@@ -12,7 +12,7 @@ const candidates = ['witty', 'humor', 'insight', 'story'].map((style, i) => ({st
 
 async function harness(t, {saved = {}, autoResponse = {paired: true, token: fixtureToken}, autoStatus = 200, authenticated = true} = {}) {
   const session = {replySessionState: structuredClone(saved)};
-  const local = {};
+  const local = {replyTransport: "bridge"};
   const callbacks = {};
   const calls = [];
   const jobs = new Map();

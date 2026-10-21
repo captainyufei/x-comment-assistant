@@ -12,7 +12,7 @@ test("inline jobs remain private to their reply document and never grant panel c
   const contentA = {id: runtimeId, tab: {id: 1}, frameId: 0, documentId: "document-a", url: "https://x.com/home"};
   const contentB = {...contentA, tab: {id: 2}, documentId: "document-b"};
   const sessionStorage = {};
-  const localStorage = {};
+  const localStorage = {replyTransport: "bridge"};
   const callbacks = {};
   const openedTabs = [];
   const calls = [];
@@ -140,7 +140,7 @@ test("inline jobs remain private to their reply document and never grant panel c
       sessionA = (await message({type: "inlineInit", context: sourceA})).sessionId;
       const result = await message({type: "inlineInit", context: sourceB}, contentB);
       sessionB = result.sessionId;
-      assert.deepEqual(Object.keys(result).sort(), ["ok", "paired", "sessionId"]);
+      assert.deepEqual(Object.keys(result).sort(), ["ok", "paired", "sessionId", "transport"]);
       assert.equal(result.paired, true);
       assert.notEqual(sessionA, sessionB);
       const health = await message({type: "inlineHealth"});

@@ -27,14 +27,15 @@
     const choices = element('div', 'choices'); body.append(choices);
     const actions = element('div', 'actions'); body.append(actions);
     const connect = button('重试生成', 'primary', handlers.retry), retry = button('重试', 'secondary', handlers.retry), cancel = button('停止生成', 'link', handlers.cancel);
-    actions.append(connect, retry, cancel);
+    const settings = button('配置模型', 'primary configure', handlers.openSettings);
+    actions.append(connect, retry, cancel, settings);
     const overwrite = element('div', 'replace'); overwrite.hidden = true; const overwriteText = element('p', '', '回复框里已有文字，你想怎么填入？'); const overwriteActions = element('div', 'actions'); overwrite.append(overwriteText, overwriteActions); body.append(overwrite);
     let pendingCandidate;
     for (const [label, mode] of [['替换原文字', 'replace'], ['接在后面', 'append'], ['取消', 'cancel']]) overwriteActions.append(button(label, mode === 'replace' ? 'primary' : 'secondary', () => { const candidate = pendingCandidate; pendingCandidate = null; overwrite.hidden = true; if (mode !== 'cancel' && candidate) handlers.insert(candidate, mode); }));
     body.append(element('p', 'hint', '挑一句填入或复制，可以继续修改。最后由你点击 X 的“回复”。'));
     function updateDisabled() {
       regenerate.disabled = currentPhase === 'loading' || inserting;
-      connect.disabled = inserting; retry.disabled = inserting; cancel.disabled = inserting;
+      connect.disabled = inserting; retry.disabled = inserting; cancel.disabled = inserting; settings.disabled = inserting;
       root.querySelectorAll('.choice, .replace button, .copy').forEach(button => { button.disabled = inserting; });
     }
     function setState({phase = 'ready', message = '', candidates = null, tonePreset, hasCustomTone = false, canCancel = false, canRetry = true, retryLabel = '重试'} = {}) {
@@ -42,6 +43,7 @@
       status.className = `status${phase === 'loading' ? ' busy' : phase === 'error' ? ' error' : ''}`;
       statusText.textContent = message || (phase === 'loading' ? '正在生成四条回复…' : '四条候选，一次生成后挑选。');
       connect.hidden = phase !== 'connect' || !canRetry; retry.hidden = phase !== 'error' || !canRetry; retry.textContent = retryLabel; cancel.hidden = !canCancel;
+      settings.hidden = phase !== 'settings';
       if (candidates) {
         hasCandidates = candidates.length > 0;
         batchTone.hidden = !hasCandidates;

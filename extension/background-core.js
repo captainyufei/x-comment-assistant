@@ -70,16 +70,16 @@ export function publicModelDiscovery(input,selection) {
 export function publicWriterSettings(input) {
   const settings = input?.writerSettings ?? input;
   if (!settings || typeof settings !== "object" || !getProvider(settings.provider) ||
-      typeof settings.model !== "string" || !settings.model || settings.model.length > 160 ||
+      typeof settings.model !== "string" || (!settings.model && settings.transport !== "direct") || settings.model.length > 160 ||
       typeof settings.keyConfigured !== "boolean" || settings.checkScope !== "local") throw new Error("本机模型配置状态无效。");
   const agent=isAgentProvider(settings.provider);
-  const result={provider: settings.provider, model: agent ? settings.model : normalizeModel(settings.provider,settings.model),
+  const result={provider: settings.provider, model: agent || (settings.transport === "direct" && !settings.model) ? settings.model : normalizeModel(settings.provider,settings.model),
     ...(settings.baseUrl!==undefined?{baseUrl:normalizeBaseUrl(settings.provider,settings.baseUrl)}:{}),
-    keyConfigured: settings.keyConfigured, checkScope: "local"};
+    keyConfigured: settings.keyConfigured, checkScope: "local", ...(settings.transport === "direct" ? {transport: "direct"} : {})};
   if(settings.credentialStorage!==undefined){
     const item=settings.credentialStorage;
-    if(!item||!['macos-keychain','windows-dpapi','legacy-plaintext','unsupported','none'].includes(item.backend)||typeof item.encrypted!=='boolean'||typeof item.legacy!=='boolean')throw new Error('密钥存储状态无效。');
-    result.credentialStorage={backend:item.backend,encrypted:item.encrypted,legacy:item.legacy};
+    if(!item||!['macos-keychain','windows-dpapi','legacy-plaintext','unsupported','none','browser-aes-gcm'].includes(item.backend)||typeof item.encrypted!=='boolean'||typeof item.legacy!=='boolean')throw new Error('密钥存储状态无效。');
+    result.credentialStorage={backend:item.backend,encrypted:item.encrypted,legacy:item.legacy,...(typeof item.available === "boolean" ? {available:item.available} : {})};
   }
   if(settings.profiles!==undefined){
     if(!settings.profiles||typeof settings.profiles!=='object'||Array.isArray(settings.profiles))throw new Error('模型配置列表无效。');
@@ -87,7 +87,7 @@ export function publicWriterSettings(input) {
     for(const [provider,profile] of Object.entries(settings.profiles)){
       if(!getProvider(provider)||isAgentProvider(provider)||!profile||typeof profile!=='object'||Array.isArray(profile)||
         typeof profile.keyConfigured!=='boolean')throw new Error('模型配置列表无效。');
-      profiles[provider]={model:normalizeModel(provider,profile.model),baseUrl:normalizeBaseUrl(provider,profile.baseUrl),keyConfigured:profile.keyConfigured};
+      profiles[provider]={model:settings.transport === "direct" && profile.model === "" ? "" : normalizeModel(provider,profile.model),baseUrl:normalizeBaseUrl(provider,profile.baseUrl),keyConfigured:profile.keyConfigured};
     }
     result.profiles=profiles;
   }
@@ -192,7 +192,7 @@ export function isTrustedSender(sender, runtimeId) {
 }
 
 export function isTrustedPopupSender(sender, runtimeId) {
-  return sender?.id === runtimeId && !sender.tab && sender.url === `chrome-extension://${runtimeId}/popup.html`;
+  return sender?.id === runtimeId && sender.url === `chrome-extension://${runtimeId}/popup.html` && (sender.frameId === undefined || sender.frameId === 0);
 }
 
 export function isTrustedInlineSender(sender, runtimeId) {

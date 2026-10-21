@@ -196,6 +196,25 @@ test('opening simplified four-type UI and returning focus never connect or gener
   } finally { h.dispose(); }
 });
 
+test('fresh direct configuration failure offers model settings without generating again or sending', async () => {
+  const h = harness({intercept: message => {
+    if (message.type === 'inlineGenerate') return {ok: false, code: 'DIRECT_CONFIG_REQUIRED', error: '请先配置 API Key 和模型。'};
+    if (message.type === 'inlineOpenSetup') return {ok: true, opened: true};
+  }});
+  try {
+    const draft = '保留这份手写草稿。'; h.editor().textContent = draft;
+    h.start(); await until(() => h.shadow()?.querySelector('.generate'));
+    assert.equal(h.calls.length, 0);
+    await clickGenerate(h); await until(() => !h.shadow().querySelector('.configure').hidden);
+    assert.equal(h.shadow().querySelector('.configure').textContent, '配置模型');
+    assert.equal(h.shadow().querySelector('.actions .secondary').hidden, true);
+    h.shadow().querySelector('.configure').click();
+    await until(() => h.calls.some(message => message.type === 'inlineOpenSetup'));
+    assert.equal(h.calls.filter(message => message.type === 'inlineGenerate').length, 1);
+    assert.equal(h.editor().textContent, draft); assert.equal(h.sent(), 0);
+  } finally { h.dispose(); }
+});
+
 test('one explicit click returns all four labelled types and each fills once without sending', async () => {
   const h = harness();
   try {
